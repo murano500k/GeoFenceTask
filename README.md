@@ -33,15 +33,15 @@ mode(gps, wifi, cellular)
 
 * onlistitemclick
 *geofence details screen:*
--time table button (opens time table screen)
--activate fence switch
--button show fence on map
--edit geofence button (point, radius, my location,type checkboxes)
--current status (is active, user inside) indicators
--show notification checkbox, notification options(autohide)
--set ringtone volume when you are inside geofence area switch
--volume select bar
--delete button
+- time table button (opens time table screen)
+- activate fence switch
+- button show fence on map
+- edit geofence button (point, radius, my location,type checkboxes)
+- current status (is active, user inside) indicators
+- show notification checkbox, notification options(autohide)
+- set ringtone volume when you are inside geofence area switch
+- volume select bar
+- delete button
 
 *time table screen:
 filters
@@ -53,6 +53,8 @@ total time
 - apply custom theme elements (screenshots attached)
 - apply 3 custom animations (gifs attached)
 - show progress on all async actions
+- use constraint layout
+- use cardview 
 
 * notification: 
 on click 
