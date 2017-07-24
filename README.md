@@ -56,7 +56,7 @@ total time
 - use constraint layout
 - use cardview 
 
-* notification: 
+notification: 
 on click 
 - open geofence on map, with parent activity stack: 
 MapActivity < GeoFenceDetailsActivity < ListActivity
