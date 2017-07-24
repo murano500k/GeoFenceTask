@@ -3,6 +3,7 @@ package com.example.geoapp.geoapp;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -16,7 +17,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +33,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -68,9 +69,12 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
     private String[] mLikelyPlaceAttributions = new String[mMaxEntries];
     private LatLng[] mLikelyPlaceLatLngs = new LatLng[mMaxEntries];
 
-    private ArrayList<LatLng> latLng;
+    private ArrayList<LatLng> latLngList;
 
     private FloatingActionButton floatingActionButton;
+    private float mRadius;
+    private LatLng geofenceLatLng;
+    private boolean drawGeofence = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,8 +92,8 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
             public void onClick(View v) {
                 Intent intent = new Intent();
 
-                if(latLng != null && latLng.size() > 0) {
-                    LatLng temp = latLng.get(latLng.size() - 1);
+                if(latLngList != null && latLngList.size() > 0) {
+                    LatLng temp = latLngList.get(latLngList.size() - 1);
                     Location location = new Location("Test");
                     location.setLatitude(temp.latitude);
                     location.setLongitude(temp.longitude);
@@ -102,7 +106,7 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
             }
         });
 
-        latLng = new ArrayList<LatLng>();
+        latLngList = new ArrayList<LatLng>();
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this /* FragmentActivity */,
@@ -113,6 +117,19 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
                 .addApi(Places.PLACE_DETECTION_API)
                 .build();
         mGoogleApiClient.connect();
+        Intent intentGeofence = getIntent();
+        if(intentGeofence != null && intentGeofence.getAction() == MenuActivity.DRAW_GEOFENCE_ACTION) {
+            drawGeofence = true;
+            geofenceLatLng = (LatLng) intentGeofence.getParcelableExtra(MenuActivity.LAT_LNG);
+            mRadius = intentGeofence.getFloatExtra(MenuActivity.RADIUS, 30);
+        }
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        drawGeofence = false;
     }
 
 
@@ -132,7 +149,6 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
-
 
     /**
      * Sets up the options menu.
@@ -180,17 +196,24 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
             @Override
             public void onMapClick(LatLng point) {
                 // TODO Auto-generated method stub
-                latLng.add(point);
+                latLngList.add(point);
                 mMap.clear();
                 mMap.addMarker(new MarkerOptions().position(point));
 
-                if(latLng.size() > 2) {
+                if(latLngList.size() > 2) {
                     Polyline polyline1 = mMap.addPolyline(new PolylineOptions()
                             .clickable(true)
-                            .addAll(latLng));
+                            .addAll(latLngList));
                 }
             }
         });
+        if(drawGeofence) {
+            int opaqueRed = Color.argb(125, 0, 200, 0);
+            mMap.addCircle(new CircleOptions().center(geofenceLatLng)
+                    .radius(mRadius).fillColor(opaqueRed).strokeColor(Color.BLUE).strokeWidth(2));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(geofenceLatLng, DEFAULT_ZOOM));
+        }
+
 
         mMap.setOnPolylineClickListener(this);
         mMap.setOnPolygonClickListener(this);
@@ -268,15 +291,17 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
         }
 
         // Set the map's camera position to the current location of the device.
-        if (mCameraPosition != null) {
+        if (mCameraPosition != null && !drawGeofence) {
             mMap.moveCamera(CameraUpdateFactory.newCameraPosition(mCameraPosition));
         } else if (mLastKnownLocation != null) {
+            if(!drawGeofence)
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                     new LatLng(mLastKnownLocation.getLatitude(),
                             mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
         } else {
             //Log.d(TAG, "Current location is null. Using defaults.");
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
+            if(!drawGeofence)
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
             mMap.getUiSettings().setMyLocationButtonEnabled(false);
         }
     }

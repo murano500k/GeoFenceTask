@@ -1,8 +1,11 @@
 package com.example.geoapp.geoapp;
 
 import com.google.android.gms.location.Geofence;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.io.Serializable;
+
+import static com.google.android.gms.location.Geofence.NEVER_EXPIRE;
 
 /**
  * Created by bovchynnikov on 19.07.17.
@@ -30,8 +33,16 @@ public class MyGeofence implements Serializable {
                 .setRequestId(String.valueOf(id))
                 .setTransitionTypes(transitionType)
                 .setCircularRegion(latitude, longitude, radius)
-                .setExpirationDuration(ONE_MINUTE)
+                .setExpirationDuration(NEVER_EXPIRE)
                 .build();
+    }
+
+    public LatLng getLatLng() {
+        return new LatLng(latitude, longitude);
+    }
+
+    public float getRadius() {
+        return radius;
     }
 
     public int getTransitionType() {
