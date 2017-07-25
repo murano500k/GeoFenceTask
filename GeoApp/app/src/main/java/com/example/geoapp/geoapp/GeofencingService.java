@@ -66,11 +66,9 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
             builder.addGeofences(mGeofenceListsToAdd);
             GeofencingRequest build = builder.build();
 
-
             if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
                     android.Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
-
 
                 LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, build,
                         getPendingIntent())
@@ -86,8 +84,6 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
                                 GeofencingService.this.onResult(status);
                             }
                         });
-
-
             }
 
         }

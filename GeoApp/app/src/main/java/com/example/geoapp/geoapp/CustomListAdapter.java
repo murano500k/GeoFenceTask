@@ -31,7 +31,7 @@ public class CustomListAdapter extends ArrayAdapter<String> {
 
     public View getView(int position,View view,ViewGroup parent) {
         LayoutInflater inflater=context.getLayoutInflater();
-        View rowView=inflater.inflate(R.layout.item_list_layout_geofence, null,true);
+        View rowView = inflater.inflate(R.layout.item_list_layout_geofence, null,true);
 
         TextView txtTitle = (TextView) rowView.findViewById(R.id.item);
         ImageView imageView = (ImageView) rowView.findViewById(R.id.icon);
@@ -41,6 +41,5 @@ public class CustomListAdapter extends ArrayAdapter<String> {
         imageView.setImageResource(imgid[position]);
         extratxt.setText("Description "+itemname[position]);
         return rowView;
-
     }
 }
