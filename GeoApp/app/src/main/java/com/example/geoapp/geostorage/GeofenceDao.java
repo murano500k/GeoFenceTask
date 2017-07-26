@@ -1,0 +1,39 @@
+package com.example.geoapp.geostorage;
+
+import android.arch.persistence.room.Dao;
+import android.arch.persistence.room.Delete;
+import android.arch.persistence.room.Insert;
+import android.arch.persistence.room.Query;
+import android.arch.persistence.room.Update;
+
+import java.util.List;
+
+/**
+ * Created by bovchynnikov on 25.07.17.
+ */
+@Dao
+public interface GeofenceDao {
+    @Query("SELECT * FROM geotable")
+    public List<GeofenceTable> getAll();
+
+    @Query("SELECT * FROM geotable WHERE uid IN (:geofenceIds)")
+    public List<GeofenceTable> loadAllByIds(int[] geofenceIds);
+
+    @Query("SELECT address FROM geotable")
+    public List<String> loadAllAddresses();
+
+    @Insert
+    public void insertAll(GeofenceTable... geotables);
+
+    @Query("SELECT * FROM geotable WHERE address LIKE :addrs LIMIT 1")
+    public GeofenceTable findByAddress(String addrs);
+
+    @Update
+    public void updateGeofenceTable(GeofenceTable... geotables);
+
+    @Delete
+    public void delete(GeofenceTable geotable);
+
+    @Delete
+    public void deleteAll(GeofenceTable... geotable);
+}

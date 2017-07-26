@@ -2,6 +2,7 @@ package com.example.geoapp.geoapp;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
+import com.example.geoapp.geostorage.GeofenceTable;
 
 import java.io.Serializable;
 
@@ -19,6 +20,7 @@ public class MyGeofence implements Serializable {
     private double longitude;
     private float radius;
     private int transitionType;
+    private GeofenceTable rowGeofence;
 
     public MyGeofence(int id, double latitude, double longitude, float radius, int transitionType) {
         this.id = id;
