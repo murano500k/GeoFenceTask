@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 1,
-    "identityHash": "7bfe0ad7054415c4a2caa96c572f6818",
+    "version": 6,
+    "identityHash": "4c97e41ca9390564418dc1d7bde88754",
     "entities": [
       {
         "tableName": "geotable",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` INTEGER PRIMARY KEY AUTOINCREMENT, `latitude` REAL, `longitude` REAL, `radius` REAL, `address` TEXT, `transition_type` INTEGER)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` INTEGER PRIMARY KEY AUTOINCREMENT, `latitude` REAL, `longitude` REAL, `radius` REAL, `address` TEXT, `transition_type` INTEGER, `is_active` INTEGER)",
         "fields": [
           {
             "fieldPath": "uid",
@@ -37,6 +37,11 @@
             "fieldPath": "transitionType",
             "columnName": "transition_type",
             "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "is_active",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -50,7 +55,7 @@
       },
       {
         "tableName": "geotable_time",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `time` INTEGER, `geotable_id` INTEGER, PRIMARY KEY(`id`), FOREIGN KEY(`geotable_id`) REFERENCES `geotable`(`uid`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `time` INTEGER, `type` INTEGER, `geotable_id` INTEGER, FOREIGN KEY(`geotable_id`) REFERENCES `geotable`(`uid`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "id",
@@ -63,6 +68,11 @@
             "affinity": "INTEGER"
           },
           {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "INTEGER"
+          },
+          {
             "fieldPath": "geotable_id",
             "columnName": "geotable_id",
             "affinity": "INTEGER"
@@ -72,7 +82,7 @@
           "columnNames": [
             "id"
           ],
-          "autoGenerate": false
+          "autoGenerate": true
         },
         "indices": [],
         "foreignKeys": [
@@ -92,7 +102,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"7bfe0ad7054415c4a2caa96c572f6818\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"4c97e41ca9390564418dc1d7bde88754\")"
     ]
   }
 }

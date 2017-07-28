@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 1,
-    "identityHash": "7bfe0ad7054415c4a2caa96c572f6818",
+    "version": 2,
+    "identityHash": "a25eb15d0d5a055a9446fea5fb5111e3",
     "entities": [
       {
         "tableName": "geotable",
@@ -50,7 +50,7 @@
       },
       {
         "tableName": "geotable_time",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `time` INTEGER, `geotable_id` INTEGER, PRIMARY KEY(`id`), FOREIGN KEY(`geotable_id`) REFERENCES `geotable`(`uid`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `time` INTEGER, `geotable_id` INTEGER, FOREIGN KEY(`geotable_id`) REFERENCES `geotable`(`uid`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "id",
@@ -72,7 +72,7 @@
           "columnNames": [
             "id"
           ],
-          "autoGenerate": false
+          "autoGenerate": true
         },
         "indices": [],
         "foreignKeys": [
@@ -92,7 +92,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"7bfe0ad7054415c4a2caa96c572f6818\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"a25eb15d0d5a055a9446fea5fb5111e3\")"
     ]
   }
 }

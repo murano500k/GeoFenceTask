@@ -13,19 +13,25 @@ import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.example.geoapp.geostorage.GeoAddresesTable;
 import com.example.geoapp.geostorage.GeoDatabase;
 import com.example.geoapp.geostorage.GeofenceDao;
 import com.example.geoapp.geostorage.GeofenceTable;
+import com.example.geoapp.geostorage.GeofenceTimeTable;
+import com.example.geoapp.utils.GeoUtils;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -35,16 +41,17 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.nearby.messages.Message;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
-
-import java.util.logging.LogRecord;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -78,7 +85,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     Handler hendlerAddNewGeofence;
 
 
-    private ArrayList<MyGeofence> MyGeofenceList;
+   /* private ArrayList<MyGeofence> MyGeofenceList;
             {
                 MyGeofenceList = new ArrayList<MyGeofence>();
                 MyGeofenceList.add(new MyGeofence(id++,  50.429557, 30.518141, 15, Geofence.GEOFENCE_TRANSITION_ENTER));
@@ -89,7 +96,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 MyGeofenceList.add(new MyGeofence(id++,  50.445824, 30.512964, 35, Geofence.GEOFENCE_TRANSITION_ENTER));
                 MyGeofenceList.add(new MyGeofence(id++,  50.418313, 30.486337, 18, Geofence.GEOFENCE_TRANSITION_ENTER));
                 MyGeofenceList.add(new MyGeofence(id++,  50.424849, 30.506372, 50, Geofence.GEOFENCE_TRANSITION_ENTER));
-            }
+            }*/
 
 
     private ArrayList<GeofenceTable> listGeofenceTable;
@@ -123,6 +130,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             R.drawable.google_maps_icon,
     };
 
+    GeofenceTimeTable testGeoAddresesTable;
+    {
+        testGeoAddresesTable = new GeofenceTimeTable();
+        java.util.Date temp = new java.util.Date();
+        testGeoAddresesTable.time = (temp.getTime());
+    }
+
 
     void testInit() {
         listGeofenceTable.add(getGeofenceRow(id++,  50.429557, 30.518141, 15, Geofence.GEOFENCE_TRANSITION_ENTER, "Address 1"));
@@ -134,7 +148,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         listGeofenceTable.add(getGeofenceRow(id++,  50.418313, 30.486337, 18, Geofence.GEOFENCE_TRANSITION_ENTER, "Address 7"));
         listGeofenceTable.add(getGeofenceRow(id++,  50.424849, 30.506372, 50, Geofence.GEOFENCE_TRANSITION_ENTER, "Address 8"));
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -164,14 +177,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 GeofenceTable []temp = new GeofenceTable[listGeofenceTable.size()];
                 mGeofenceDao.insertAll(listGeofenceTable.toArray(temp));
-                itemname.addAll(mGeofenceDao.loadAllAddresses());
-
-                Log.d("Test_ltd", "hendlerInitListUI case 3 itemname size = " + itemname.size());
                 hendlerInitListUI.sendEmptyMessage(0);
             }
         });
         threadInitDB.start();
 
+
+        //Log.d("Test_ltd", "GeoUtils.isNetworkConnected(this);=" + GeoUtils.isNetworkConnected(this));
         hendlerInitListUI = new Handler() {
             public void handleMessage(android.os.Message msg) {
                 Log.d("Test_ltd", "hendlerInitListUI case 1");
@@ -185,14 +197,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         hendlerAddNewGeofence = new Handler() {
             public void handleMessage(android.os.Message msg) {
                 Log.d("Test_ltd", "hendlerAddNewGeofence case 1");
-                if(msg.what == 0 && MapsActivity.customListAdapter != null) {
+                if(msg.what == 1) {
                     Log.d("Test_ltd", "hendlerAddNewGeofence case 2");
-                    MapsActivity.customListAdapter.notifyDataSetChanged();
+                    String url = (String)msg.obj;
+                    getAddress(url);
                 }
             }
         };
 
-        customListAdapter = new CustomListAdapter(this, itemname, imgid);
+        customListAdapter = new CustomListAdapter(this, listGeofenceTable, imgid/*, listGeofenceTable*/);
         list = (ListView) findViewById(R.id.list_geofences);
         list.setAdapter(customListAdapter);
 
@@ -211,7 +224,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         .radius(radius).fillColor(opaqueRed).strokeColor(Color.BLUE).strokeWidth(2));
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(geofenceLatLng, DEFAULT_ZOOM));
                 mMap.addMarker(new MarkerOptions().position(geofenceLatLng));
-
             }
         });
 
@@ -238,47 +250,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mDb.close();
-    }
-
     private String getUrl(LatLng latLng) {
         return startUrl + latLng.latitude + commaUrl + latLng.longitude + endUrl;
     }
 
-    /*private void convertLatLngToAddress() {
-        Log.d("Test_ltd", "case 2 customListAdapter == " + (customListAdapter != null));
-        ArrayList<String> urlStr = new ArrayList<String>();
-
-        for(MyGeofence g : MyGeofenceList) {
-            urlStr.add(getUrl(g.getLatLng()));
-
-        }
-        String strs[] = new String[urlStr.size()];
-        strs = urlStr.toArray(strs);
-        new GetAddress().execute(strs);
-    }*/
-
     public void onMapReady(GoogleMap googleMap) {
-        // Add a marker in Sydney, Australia,
-        // and move the map's camera to the same location.
         mMap = googleMap;
-       /* LatLng sydney = new LatLng(-33.852, 151.211);
-        mMap.addMarker(new MarkerOptions().position(sydney)
-                .title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));*/
+    }
+
+    void updateGeofenceTableList() {
+        listGeofenceTable.clear();
+        listGeofenceTable.addAll(mGeofenceDao.getAll());
+
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -288,23 +271,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(requestCode == 1) {
             Location location = (Location) data.getParcelableExtra("location");
             if(location != null) {
-                android.util.Log.d("Test_cl", "location" + location.toString());
                 final LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
                 final float radius = 25;
-//                Thread th = new Thread(new Runnable() {
-//                    @Override
-//                    public void run() {
-                        String address = getAddress(latLng);
- //                       synchronized (listGeofenceTable) {
-                            listGeofenceTable.add(getGeofenceRow(id++,  latLng.latitude, latLng.longitude, radius,
-                                    Geofence.GEOFENCE_TRANSITION_ENTER, address));
-                            itemname.add(address);
-                MapsActivity.customListAdapter.notifyDataSetChanged();
-//                        }
-//                        hendlerAddNewGeofence.sendEmptyMessage(0);
-//                    }
-//                });
-//                th.start();
+                final String urlJson = getUrl(latLng);
+                String address = getAddress(urlJson);
+
+                Thread th = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                         GeofenceTable temp = getGeofenceRow(id++, latLng.latitude, latLng.longitude, radius,
+                                Geofence.GEOFENCE_TRANSITION_ENTER, urlJson);
+                         mGeofenceDao.insertAll(temp);
+                        String tempUrl = urlJson;
+                        android.os.Message msg = hendlerAddNewGeofence.obtainMessage(1, tempUrl);
+                        hendlerAddNewGeofence.sendMessage(msg);
+                    }
+                });
+                th.start();
             }
         }
     }
@@ -319,7 +302,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         public void onClick(DialogInterface dialog, int id) {
                             // FIRE ZE MISSILES!
                         }
-                    });
+                    }).setNeutralButton("SET", null);
                     /*.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             // User cancelled the dialog
@@ -350,9 +333,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mId++;
     }
 
-
-    //////////////////////////////////////////
     protected class GetAddress extends AsyncTask<String, Void, String> {
+
+
+
+        GetAddress(String str) {
+
+        }
 
         @Override
         protected void onPreExecute() {
@@ -374,7 +361,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             Integer urlsCount = urls.length;
             int k = 0;
             for(String url : urls) {
-
                 String jsonStr = sh.makeServiceCall(url);
 
                 Log.e(TAG, "Response from url: " + jsonStr);
@@ -390,11 +376,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         //for (int i = 0; i < contacts.length(); i++) {
                             JSONObject c = contacts.getJSONObject(0);
                             String address = c.getString("formatted_address");
-                            if(k < itemname.size()) {
-                                itemname.set(k++, address);
-                                Log.d("Test_ltd", "address = " + itemname.get(k - 1));
-                            }
-                        //}
+                            GeofenceTable geofenceTable = mGeofenceDao.findByAddress(url);
+                        if(geofenceTable != null) {
+
+                              geofenceTable.address = address;
+                              mGeofenceDao.updateGeofenceRow(geofenceTable);
+                             listGeofenceTable.add(geofenceTable);
+
+                        }
                     } catch (final JSONException e) {
                         Log.e(TAG, "Json parsing error: " + e.getMessage());
                         runOnUiThread(new Runnable() {
@@ -429,40 +418,79 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             // Dismiss the progress dialog
-
             if(MapsActivity.customListAdapter != null) {
-                Log.d("Test_ltd", "onPostExecute");
                 MapsActivity.customListAdapter.notifyDataSetChanged();
             }
             if (pDialog.isShowing()) {
-                Log.d("Test_ltd", "onPostExecute case 1");
                 pDialog.dismiss();
             }
-            Log.d("Test_ltd", "onPostExecute case 2");
-
         }
     }
 
     GeofenceTable getGeofenceRow(int id, double latitude, double longitude, float radius, int transitionType, String address) {
-        Log.d("Test_ltd", "getGeofenceRow case 1");
         GeofenceTable geofenceRow = new GeofenceTable();
         geofenceRow.latitude = latitude;
         geofenceRow.longitude = longitude;
         geofenceRow.radius = radius;
         geofenceRow.transitionType = transitionType;
-        geofenceRow.address = address;
+        geofenceRow.address = address;// != null ? address : getAddress(new LatLng(latitude, longitude));
         return geofenceRow;
     }
 
-    String getAddress(LatLng latLng) {
+    String getAddress(String urlJson) {
+        Log.d("Test_ltd", "getAddress case 1");
         String address = "";
         try {
-            address = (new GetAddress()).execute(getUrl(latLng)).get();
+            address = (new GetAddress(null)).execute(urlJson/*getUrl(latLng)*/).get();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
         return address;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(mDb != null) {
+            mDb.close();
+        }
+    }
+
+    /**
+     * Sets up the options menu.
+     * @param menu The options menu.
+     * @return Boolean.
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.maps_menu, menu);
+        return true;
+    }
+
+    /**
+     * Handles a click on the menu option to get a place.
+     * @param item The menu item to handle.
+     * @return Boolean.
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.menu_gps_settings) {
+            Intent intent = new Intent();
+            intent.setAction(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivity(intent);
+        }
+        return true;
     }
 }

@@ -4,9 +4,12 @@ import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
+import android.content.Intent;
 
 import com.example.geoapp.geoapp.MyGeofence;
 import com.google.android.gms.location.Geofence;
+
+import java.util.HashMap;
 
 /**
  * Created by bovchynnikov on 25.07.17.
@@ -32,11 +35,8 @@ public class GeofenceTable {
     @ColumnInfo(name = "transition_type")
     public int transitionType;
 
-    @ColumnInfo(name = "time_enter")
-    public String timeEnter;
-
-    @ColumnInfo(name = "time_exit")
-    public String timeExit;
+    @ColumnInfo(name = "is_active")
+    public boolean isActive = true;
 
     @Ignore
     public MyGeofence myGeofence;
@@ -49,5 +49,10 @@ public class GeofenceTable {
         int transitionType = this.transitionType;
         float radius = this.radius;
         return new MyGeofence(id,  latitude, longitude, radius, transitionType);
+    }
+
+    @Ignore
+    public String toString() {
+        return new String("id = " + uid + ", address = " + address);
     }
 }

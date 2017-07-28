@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +34,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -40,7 +42,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PointOfInterest;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 
@@ -75,6 +76,12 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
     private float mRadius;
     private LatLng geofenceLatLng;
     private boolean drawGeofence = false;
+
+    private SeekBar mSeekBarRadius;
+    private Circle circleDrawSeekBar = null;
+    private LatLng chosenPoint = null;
+    private int startRadius = 15;
+    private final int fillCircleColor = Color.argb(125, 0, 200, 0);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,6 +131,38 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
             mRadius = intentGeofence.getFloatExtra(MenuActivity.RADIUS, 30);
         }
 
+        mSeekBarRadius = (SeekBar) findViewById(R.id.set_radius_seek_bar);
+        android.support.constraint.ConstraintLayout.LayoutParams oldLp =
+                (android.support.constraint.ConstraintLayout.LayoutParams) mSeekBarRadius.getLayoutParams();
+        int seelBarWitch = (int)(getWindowManager().getDefaultDisplay().getWidth() * 0.75);
+        android.support.constraint.ConstraintLayout.LayoutParams ablp =
+                new android.support.constraint.ConstraintLayout.LayoutParams(seelBarWitch, oldLp.height);
+        mSeekBarRadius.setLayoutParams(ablp);
+        mSeekBarRadius.setMax(400);
+        mSeekBarRadius.setProgress(5);
+        mSeekBarRadius.incrementProgressBy(5);
+        mSeekBarRadius.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                /*if(latLngList.size() == 0)
+                    return;*/
+                if(circleDrawSeekBar != null )
+                    circleDrawSeekBar.remove();
+                circleDrawSeekBar = mMap.addCircle(new CircleOptions().center(chosenPoint)
+                        .radius(progress).fillColor(fillCircleColor).strokeColor(Color.BLUE).strokeWidth(2));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                //circleDrawSeekBar = null;
+                startRadius = seekBar.getProgress();
+            }
+        });
     }
 
     @Override
@@ -196,7 +235,7 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
             @Override
             public void onMapClick(LatLng point) {
                 // TODO Auto-generated method stub
-                latLngList.add(point);
+                /*latLngList.add(point);
                 mMap.clear();
                 mMap.addMarker(new MarkerOptions().position(point));
 
@@ -204,13 +243,26 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
                     Polyline polyline1 = mMap.addPolyline(new PolylineOptions()
                             .clickable(true)
                             .addAll(latLngList));
+                }*/
+
+                if(circleDrawSeekBar != null) {
+                    circleDrawSeekBar.remove();
+                    circleDrawSeekBar = null;
                 }
+
+               // mSeekBarRadius = (SeekBar) findViewById(R.id.set_radius_seek_bar);
+                //mSeekBarRadius.setProgress(startRadius);
+                chosenPoint = point;
+                mMap.clear();
+                mMap.addMarker(new MarkerOptions().position(chosenPoint));
+                circleDrawSeekBar = mMap.addCircle(new CircleOptions().center(chosenPoint)
+                        .radius(startRadius).fillColor(fillCircleColor).strokeColor(Color.BLUE).strokeWidth(2));
+
             }
         });
         if(drawGeofence) {
-            int opaqueRed = Color.argb(125, 0, 200, 0);
-            mMap.addCircle(new CircleOptions().center(geofenceLatLng)
-                    .radius(mRadius).fillColor(opaqueRed).strokeColor(Color.BLUE).strokeWidth(2));
+             mMap.addCircle(new CircleOptions().center(geofenceLatLng)
+                    .radius(mRadius).fillColor(fillCircleColor).strokeColor(Color.BLUE).strokeWidth(2));
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(geofenceLatLng, DEFAULT_ZOOM));
         }
 
