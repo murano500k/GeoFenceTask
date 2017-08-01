@@ -99,15 +99,16 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
             public void onClick(View v) {
                 Intent intent = new Intent();
 
-                if(latLngList != null && latLngList.size() > 0) {
-                    LatLng temp = latLngList.get(latLngList.size() - 1);
-                    Location location = new Location("Test");
-                    location.setLatitude(temp.latitude);
-                    location.setLongitude(temp.longitude);
-                    intent.putExtra("location", location);
-                }
-                else
-                    intent.putExtra("location", mLastKnownLocation);
+                //if(latLngList != null && latLngList.size() > 0) {
+                 //   LatLng temp = latLngList.get(latLngList.size() - 1);
+                 //   Location location = new Location("Test");
+                 //   location.setLatitude(temp.latitude);
+                //    location.setLongitude(temp.longitude);
+                GeofenceGeometry geofenceGeometry = new GeofenceGeometry(chosenPoint, startRadius);
+                    intent.putExtra("location", geofenceGeometry);
+                //}
+                //else
+                //    intent.putExtra("location", mLastKnownLocation);
                 setResult(1, intent);
                 finish();
             }
@@ -159,7 +160,6 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                //circleDrawSeekBar = null;
                 startRadius = seekBar.getProgress();
             }
         });
@@ -285,7 +285,7 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.option_get_place) {
-            showCurrentPlace();
+            //showCurrentPlace();
         }
         return true;
     }

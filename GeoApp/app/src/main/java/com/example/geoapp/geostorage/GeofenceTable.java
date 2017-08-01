@@ -7,6 +7,7 @@ import android.arch.persistence.room.PrimaryKey;
 import android.content.Intent;
 
 import com.example.geoapp.geoapp.MyGeofence;
+import com.example.geoapp.geoapp.R;
 import com.google.android.gms.location.Geofence;
 
 import java.util.HashMap;
@@ -55,4 +56,19 @@ public class GeofenceTable {
     public String toString() {
         return new String("id = " + uid + ", address = " + address);
     }
+
+    @Ignore
+    final int defaultIconId = 3;
+
+    @Ignore
+    final int activeIconId = R.drawable.maps_2_icon;
+
+    @Ignore
+    final int notActiveIconId = R.drawable.maps_icon;
+
+    @Ignore
+    public int getBitmapId() {
+        return isActive ? activeIconId : notActiveIconId;
+    }
+
 }

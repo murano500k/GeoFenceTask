@@ -20,6 +20,9 @@ public interface GeofenceDao {
     @Query("SELECT * FROM geotable WHERE uid IN (:geofenceIds)")
     public List<GeofenceTable> loadAllByIds(int[] geofenceIds);
 
+    @Query("SELECT * FROM geotable WHERE is_active IN (:active)")
+    public List<GeofenceTable> loadAllActive(boolean active);
+
     @Query("SELECT address FROM geotable")
     public List<String> loadAllAddresses();
 
@@ -28,6 +31,9 @@ public interface GeofenceDao {
 
     @Query("SELECT * FROM geotable WHERE address LIKE :addrs LIMIT 1")
     public GeofenceTable findByAddress(String addrs);
+
+    @Query("SELECT * FROM geotable WHERE address LIKE (:url)")
+    public List<GeofenceTable> findByUrlsInAddresses(String url);
 
     @Query("SELECT * FROM geotable WHERE uid LIKE :id LIMIT 1")
     public GeofenceTable findByUid(String id);

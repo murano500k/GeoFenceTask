@@ -20,7 +20,33 @@
             <item
                 android:id="@+id/menu_filter"
                 android:title="@string/menu_filter" >
+                <menu>
+                    <item android:id="@+id/menu_filter_"
+                            android:title="@string/menu_filter" >
+                            <group android:id="@+id/group_active"
+                                android:checkableBehavior="single"
+                                android:checkable="true">
+                                <item android:id="@+id/menu_all"
+                                    android:title="@string/menu_all"
+                                    />
+                                <item android:id="@+id/menu_active"
+                                    android:title="@string/menu_active"
+                                    />
+                            </group>
+                    </item>
+                </menu>
             </item>
+    <!--        <item
+                android:id="@+id/menu_highlight"
+                android:title="@string/menu_highlight" >
+                <group android:id="@+id/group_highlight"
+                    android:checkableBehavior="all"
+                    android:checkable="true">
+                <item android:id="@+id/menu_highlight_item"
+                    android:title="@string/menu_highlight"
+                    />
+                </group>
+                </item>-->
             <item
                 android:id="@+id/menu_gps_settings"
                 android:title="@string/menu_gps_settings" />

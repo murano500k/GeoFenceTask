@@ -2,6 +2,7 @@ package com.example.geoapp.utils;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 /**
  * Created by bovchynnikov on 27.07.17.
@@ -9,7 +10,12 @@ import android.net.ConnectivityManager;
 
 public class GeoUtils {
     public static boolean isNetworkConnected(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        return cm.getActiveNetworkInfo() != null;
+        ConnectivityManager connectivityManager = (ConnectivityManager) context
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetInfo = connectivityManager
+                .getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        boolean isConnected = activeNetInfo != null && activeNetInfo.isConnectedOrConnecting();
+        boolean isConnectedWiFi = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected();
+        return isConnected || isConnectedWiFi;
     }
 }
