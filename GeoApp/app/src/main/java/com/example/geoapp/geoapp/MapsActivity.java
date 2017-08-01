@@ -81,8 +81,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private ProgressDialog pDialog;
     private static int id = 0;
-    GeoDatabase mDb;
-    GeofenceDao mGeofenceDao;
+    static GeoDatabase mDb;
+    static GeofenceDao mGeofenceDao;
 
     Handler hendlerInitListUI;
     Handler hendlerAddNewGeofence;

@@ -15,6 +15,12 @@
     <string name="menu_highlight">Highlight</string>
     <string name="menu_geo_options">Options</string>
     <string name="menu_geo_delete">Delete</string>
+    <string name="activate">Activate</string>
+    <string name="notification">Notification</string>
+    <string name="notification_hide">Notifi autohide</string>
+    <string name="text_radius">Radius: </string>
+    <string name="text_latitude">Latitude: </string>
+    <string name="text_longitude">Longitude: </string>
 
 
 </resources>

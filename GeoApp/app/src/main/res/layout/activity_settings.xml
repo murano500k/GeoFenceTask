@@ -6,6 +6,190 @@
     android:layout_height="match_parent"
     tools:context="com.example.geoapp.geoapp.SettingsActivity">
 
+    <TextView
+        android:id="@+id/text_active"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/activate"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:textSize="25dp"
+        app:layout_constraintTop_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="parent"
+        android:layout_marginStart="5dp" />
+
+    <ToggleButton
+        android:id="@+id/active_geofence_toggle"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/toggle_selector"
+        android:textOn=""
+        android:textOff=""
+        app:layout_constraintTop_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginEnd="5dp" />
+
+    <View
+        android:id="@+id/sep1"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorOrange"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintTop_toBottomOf="@+id/text_active"
+       />
+
+    <TextView
+        android:id="@+id/text_notifier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/notification"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:textSize="25dp"
+        app:layout_constraintTop_toBottomOf="@+id/sep1"
+        app:layout_constraintLeft_toRightOf="parent"
+        android:layout_marginStart="5dp" />
+
+    <CheckBox android:id="@+id/cb_notification"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintTop_toBottomOf="@+id/sep1"
+        app:layout_constraintBottom_toTopOf="@+id/sep2"
+        app:layout_constraintRight_toRightOf="parent"
+        />
+    <View
+        android:id="@+id/sep2"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorOrange"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintTop_toBottomOf="@+id/text_notifier"
+        />
+
+    <TextView
+        android:id="@+id/text_notifier_autohide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/notification_hide"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:textSize="25dp"
+        app:layout_constraintTop_toBottomOf="@+id/sep2"
+        app:layout_constraintLeft_toRightOf="parent"
+        android:layout_marginStart="5dp" />
+
+    <CheckBox android:id="@+id/cb_notification_autohide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintTop_toBottomOf="@+id/sep2"
+        app:layout_constraintBottom_toTopOf="@+id/sep3"
+        app:layout_constraintRight_toRightOf="parent"
+        />
+    <View
+        android:id="@+id/sep3"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorOrange"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintTop_toBottomOf="@+id/text_notifier_autohide"
+        />
+
+    <LinearLayout
+        android:id="@+id/ll_geo_set_rd"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/sep3">
+        <TextView
+            android:id="@+id/text_radius_set"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/text_radius"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="5dp"
+            android:textSize="25dp" />
+        <EditText
+            android:id="@+id/edit_text_radius_set"
+            android:layout_width="70dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:layout_gravity="center_horizontal"/>
+        </LinearLayout>
+    <LinearLayout
+        android:id="@+id/ll_geo_set_lat"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/ll_geo_set_rd">
+        <TextView
+            android:id="@+id/text_lat_set"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/text_latitude"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="5dp"
+            android:textSize="25dp" />
+
+        <TextView
+            android:id="@+id/text_lat_set_var"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_gravity="center_horizontal"
+            android:textSize="25dp" />
+
+        </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_geo_set_long"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/ll_geo_set_lat">
+        <TextView
+            android:id="@+id/text_long_set"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/text_longitude"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="5dp"
+            android:textSize="25dp" />
+        <TextView
+            android:id="@+id/text_long_set_var"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_gravity="center_horizontal"
+            android:textSize="25dp" />
+    </LinearLayout>
+    <View
+        android:id="@+id/sep4"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorOrange"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintTop_toBottomOf="@+id/ll_geo_set_long"
+        />
 
 
 </android.support.constraint.ConstraintLayout>
