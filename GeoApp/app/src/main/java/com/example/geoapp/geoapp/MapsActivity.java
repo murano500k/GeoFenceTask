@@ -3,7 +3,6 @@ package com.example.geoapp.geoapp;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.arch.persistence.room.Room;
 import android.content.BroadcastReceiver;
@@ -12,11 +11,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.location.Location;
-import android.net.ConnectivityManager;
-import android.net.LinkProperties;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.provider.Settings;
@@ -30,7 +24,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.example.geoapp.geostorage.GeoDatabase;
@@ -91,9 +84,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     static MapsActivity instance;
 
+    static public final int RESULT_SETTINGS_DELETE = 0;
+    static public final int RESULT_SETTINGS_UPDATE = 1;
+    static public final int RESULT_CREATE_NEW_GEOFENCE = 2;
+    static public final String GEOFENCE_GEOMETRY = "geofence_geometry";
+    static public final String GEOFENCE_TABLE = "geofence_table";
+    static public final int UPDATE_LIST = 3;
+
     private ArrayList<GeofenceTable> mListGeofenceTableAll;
     private ArrayList<GeofenceTable> mListGeofenceTableOnlyActive;
-
     {
         mListGeofenceTableAll = new ArrayList<GeofenceTable>();
         mListGeofenceTableOnlyActive = new ArrayList<GeofenceTable>();
@@ -167,16 +166,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 GeofenceTable[] temp = new GeofenceTable[mListGeofenceTableAll.size()];
                 mGeofenceDao.insertAll(mListGeofenceTableAll.toArray(temp));
-                hendlerInitListUI.sendEmptyMessage(0);
+                mListGeofenceTableAll.clear();
+                mListGeofenceTableAll.addAll(mGeofenceDao.getAll());
                 mListGeofenceTableOnlyActive.addAll(mGeofenceDao.loadAllActive(true));
+                hendlerInitListUI.sendEmptyMessage(0);
             }
         });
         threadInitDB.start();
 
         hendlerInitListUI = new Handler() {
             public void handleMessage(android.os.Message msg) {
-                if (msg.what == 0 && MapsActivity.customListAdapter != null) {
-                    MapsActivity.customListAdapter.notifyDataSetChanged();
+                if (msg.what == MapsActivity.UPDATE_LIST) {
+                    updateList();
                 }
             }
         };
@@ -222,7 +223,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                            int pos, long id) {
                 // TODO Auto-generated method stub
                 Intent intent = new Intent(MapsActivity.this, SettingsActivity.class);
-                startActivityForResult(intent, 2);
+                Log.d("Test_gt", "mapsact set gt uid = " + (showAllGeofenceInList ? mListGeofenceTableAll : mListGeofenceTableOnlyActive).get(pos).uid);
+                intent.putExtra(MapsActivity.GEOFENCE_TABLE, (showAllGeofenceInList ? mListGeofenceTableAll : mListGeofenceTableOnlyActive).get(pos));
+                startActivityForResult(intent, MapsActivity.RESULT_SETTINGS_UPDATE);
                 return true;
             }
         });
@@ -232,7 +235,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MapsActivity.this, CurrentLocationActivity.class);
-                startActivityForResult(intent, 1);
+                startActivityForResult(intent, MapsActivity.RESULT_CREATE_NEW_GEOFENCE);
             }
         });
 
@@ -249,30 +252,49 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     void updateGeofenceTableList() {
         mListGeofenceTableAll.clear();
         mListGeofenceTableAll.addAll(mGeofenceDao.getAll());
-
+        mListGeofenceTableOnlyActive.clear();
+        mListGeofenceTableOnlyActive.addAll(mGeofenceDao.loadAllActive(true));
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (data == null) {
             return;
         }
-        if (requestCode == 1) {
-            GeofenceGeometry location = (GeofenceGeometry) data.getParcelableExtra("location");
-            if (location != null) {
-                final LatLng latLng = location.getmLatLng();
-                final float radius = location.getmRadius();
-                final String urlJson = getUrl(latLng);
-                String address = getAddress(urlJson);
 
+        if (requestCode == MapsActivity.RESULT_CREATE_NEW_GEOFENCE) {
+            if(resultCode == RESULT_OK){
+                GeofenceGeometry location = (GeofenceGeometry) data.getParcelableExtra(MapsActivity.GEOFENCE_GEOMETRY);
+                if (location != null) {
+                    final LatLng latLng = location.getmLatLng();
+                    final float radius = location.getmRadius();
+                    final String urlJson = getUrl(latLng);
+                    String address = getAddress(urlJson);
+
+                    Thread th = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            GeofenceTable temp = getGeofenceRow(id++, latLng.latitude, latLng.longitude, radius,
+                                    Geofence.GEOFENCE_TRANSITION_ENTER, urlJson);
+                            mGeofenceDao.insertAll(temp);
+                            String tempUrl = urlJson;
+                            android.os.Message msg = hendlerAddNewGeofence.obtainMessage(1, tempUrl);
+                            hendlerAddNewGeofence.sendMessage(msg);
+                        }
+                    });
+                    th.start();
+                }
+            }
+        } else if(requestCode == MapsActivity.RESULT_SETTINGS_UPDATE) {
+            if(resultCode == MapsActivity.RESULT_SETTINGS_DELETE) {
+                Log.d("Test_gt", "onActivityResult: RESULT_SETTINGS_DELETE");
+                final GeofenceTable gt = (GeofenceTable)data.getParcelableExtra(MapsActivity.GEOFENCE_TABLE);
+                Log.d("Test_gt", "mapsact gt uid = " + gt.uid);
                 Thread th = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        GeofenceTable temp = getGeofenceRow(id++, latLng.latitude, latLng.longitude, radius,
-                                Geofence.GEOFENCE_TRANSITION_ENTER, urlJson);
-                        mGeofenceDao.insertAll(temp);
-                        String tempUrl = urlJson;
-                        android.os.Message msg = hendlerAddNewGeofence.obtainMessage(1, tempUrl);
-                        hendlerAddNewGeofence.sendMessage(msg);
+                        mGeofenceDao.delete(mGeofenceDao.findByUid((new Integer(gt.uid)).toString()));
+                        updateGeofenceTableList();
+                        hendlerInitListUI.sendEmptyMessage(MapsActivity.UPDATE_LIST);
                     }
                 });
                 th.start();

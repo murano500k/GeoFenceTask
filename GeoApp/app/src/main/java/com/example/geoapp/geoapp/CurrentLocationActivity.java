@@ -105,11 +105,11 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
                  //   location.setLatitude(temp.latitude);
                 //    location.setLongitude(temp.longitude);
                 GeofenceGeometry geofenceGeometry = new GeofenceGeometry(chosenPoint, startRadius);
-                    intent.putExtra("location", geofenceGeometry);
+                    intent.putExtra(MapsActivity.GEOFENCE_GEOMETRY, geofenceGeometry);
                 //}
                 //else
                 //    intent.putExtra("location", mLastKnownLocation);
-                setResult(1, intent);
+                setResult(RESULT_OK, intent);
                 finish();
             }
         });
