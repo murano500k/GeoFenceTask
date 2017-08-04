@@ -13,11 +13,13 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.example.geoapp.geostorage.GeofenceTable;
+import com.google.android.gms.location.Geofence;
 
 public class SettingsActivity extends AppCompatActivity {
     EditText radius;
     GeofenceTable gt;
     ToggleButton active;
+    CheckBox cbEnter, cbExit, cbDwell;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,11 +28,13 @@ public class SettingsActivity extends AppCompatActivity {
         setTitle(R.string.menu_settings_geo);
         Intent intent = getIntent();
         gt = (GeofenceTable)intent.getParcelableExtra(MapsActivity.GEOFENCE_TABLE);
-        Log.d("Test_gt", "setact create gt uid = " + gt.uid);
         ((TextView)findViewById(R.id.text_lat_set_var)).setText((new Double(gt.latitude)).toString());
         ((TextView)findViewById(R.id.text_long_set_var)).setText((new Double(gt.longitude)).toString());
         (radius = (EditText)findViewById(R.id.edit_text_radius_set)).setText((new Float(gt.radius)).toString());
         (active = (ToggleButton)findViewById(R.id.active_geofence_toggle)).setChecked(gt.isActive);
+        (cbEnter = (CheckBox)findViewById(R.id.cb_transition_enter)).setChecked((gt.transitionType & Geofence.GEOFENCE_TRANSITION_ENTER) != 0);
+        (cbExit = (CheckBox)findViewById(R.id.cb_transition_exit)).setChecked((gt.transitionType & Geofence.GEOFENCE_TRANSITION_EXIT) != 0);
+        (cbDwell = (CheckBox)findViewById(R.id.cb_transition_dwell)).setChecked((gt.transitionType & Geofence.GEOFENCE_TRANSITION_DWELL) != 0);
 
     }
 
@@ -57,7 +61,6 @@ public class SettingsActivity extends AppCompatActivity {
             intent.putExtra(MapsActivity.GEOFENCE_TABLE, gt);
             intent.setExtrasClassLoader(GeofenceTable.class.getClassLoader());
             setResult(MapsActivity.RESULT_SETTINGS_DELETE, intent);
-            Log.d("Test_gt", "setact gt uid = " + gt.uid);
             finish();
         }
         return super.onOptionsItemSelected(item);

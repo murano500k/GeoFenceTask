@@ -1,5 +1,6 @@
 package com.example.geoapp.geoapp;
 
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -14,9 +15,13 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +30,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
@@ -73,7 +79,7 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
     private ArrayList<LatLng> latLngList;
 
     private FloatingActionButton floatingActionButton;
-    private float mRadius;
+    private float mRadius = 0.f;
     private LatLng geofenceLatLng;
     private boolean drawGeofence = false;
 
@@ -82,6 +88,8 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
     private LatLng chosenPoint = null;
     private int startRadius = 15;
     private final int fillCircleColor = Color.argb(125, 0, 200, 0);
+
+    private int mTransitionType = Geofence.GEOFENCE_TRANSITION_ENTER;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,7 +112,7 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
                  //   Location location = new Location("Test");
                  //   location.setLatitude(temp.latitude);
                 //    location.setLongitude(temp.longitude);
-                GeofenceGeometry geofenceGeometry = new GeofenceGeometry(chosenPoint, startRadius);
+                GeofenceGeometry geofenceGeometry = new GeofenceGeometry(chosenPoint, startRadius, mTransitionType);
                     intent.putExtra(MapsActivity.GEOFENCE_GEOMETRY, geofenceGeometry);
                 //}
                 //else
@@ -115,6 +123,8 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
         });
 
         latLngList = new ArrayList<LatLng>();
+
+        Log.d("Test_ttt", "type = " + mTransitionType);
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this /* FragmentActivity */,
@@ -145,12 +155,13 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
         mSeekBarRadius.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                /*if(latLngList.size() == 0)
-                    return;*/
+                if(chosenPoint == null)
+                    return;
                 if(circleDrawSeekBar != null )
                     circleDrawSeekBar.remove();
                 circleDrawSeekBar = mMap.addCircle(new CircleOptions().center(chosenPoint)
                         .radius(progress).fillColor(fillCircleColor).strokeColor(Color.BLUE).strokeWidth(2));
+                mRadius = progress;
             }
 
             @Override
@@ -171,6 +182,12 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
         drawGeofence = false;
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("Test_ttt", "onResume");
+        mTransitionType = Geofence.GEOFENCE_TRANSITION_ENTER;
+    }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -285,9 +302,55 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.option_get_place) {
-            //showCurrentPlace();
+            showDialogOption();
         }
         return true;
+    }
+
+    private void showDialogOption() {
+        final Dialog dialog = new Dialog(CurrentLocationActivity.this);
+        dialog.setContentView(R.layout.dialog_options);
+        dialog.setTitle("Options");
+        final EditText editRadius = (EditText)dialog.findViewById(R.id.edit_text_radius_set_dialog_options);
+        editRadius.setText((new Float(mRadius)).toString());
+        final CheckBox checkEnter = (CheckBox)dialog.findViewById(R.id.cb_transition_enter_dialog_options);
+        final CheckBox checkExit = (CheckBox)dialog.findViewById(R.id.cb_transition_exit_dialog_options);
+        final CheckBox checkDwell = (CheckBox)dialog.findViewById(R.id.cb_transition_dwell_dialog_options);
+        checkEnter.setChecked((mTransitionType & Geofence.GEOFENCE_TRANSITION_ENTER) != 0);
+        checkExit.setChecked((mTransitionType & Geofence.GEOFENCE_TRANSITION_EXIT) != 0);
+        checkDwell.setChecked((mTransitionType & Geofence.GEOFENCE_TRANSITION_DWELL) != 0);
+        Button btOk = (Button) dialog.findViewById(R.id.dialog_options_ok);
+        btOk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mRadius = Float.valueOf(editRadius.getText().toString());
+
+                if(mRadius < 0)
+                    mRadius = 0;
+                else if(mRadius > 400)
+                    mRadius = 400;
+
+                mSeekBarRadius.setProgress((int)mRadius);
+                mTransitionType = 0;
+                if(checkEnter.isChecked())
+                    mTransitionType = mTransitionType | Geofence.GEOFENCE_TRANSITION_ENTER;
+                if(checkExit.isChecked())
+                    mTransitionType = mTransitionType | Geofence.GEOFENCE_TRANSITION_EXIT;
+                if(checkDwell.isChecked())
+                    mTransitionType = mTransitionType | Geofence.GEOFENCE_TRANSITION_DWELL;
+                dialog.dismiss();
+            }
+        });
+
+        Button btCancel = (Button) dialog.findViewById(R.id.dialog_options_cancel);
+        btCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
+
     }
 
     private void updateLocationUI() {
@@ -356,6 +419,7 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
             mMap.getUiSettings().setMyLocationButtonEnabled(false);
         }
+        chosenPoint = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
     }
 
     private void showCurrentPlace() {

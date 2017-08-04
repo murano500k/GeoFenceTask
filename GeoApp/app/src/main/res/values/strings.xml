@@ -21,6 +21,11 @@
     <string name="text_radius">Radius: </string>
     <string name="text_latitude">Latitude: </string>
     <string name="text_longitude">Longitude: </string>
+    <string name="text_transition">Transition type: </string>
+    <string name="text_transition_enter">Enter: </string>
+    <string name="text_transition_exit">Exit: </string>
+    <string name="text_transition_dwell">Dwell: </string>
+
 
 
 </resources>

@@ -15,20 +15,24 @@ public class GeofenceGeometry implements Parcelable {
 
     private LatLng mLatLng;
     private float mRadius;
+    private int mTmTransitionType;
 
-    GeofenceGeometry(Location location, float radius){
+    GeofenceGeometry(Location location, float radius, int transitionType){
         mLatLng = new LatLng(location.getLatitude(), location.getLongitude());
         mRadius = radius;
+        mTmTransitionType = transitionType;
     }
 
-    GeofenceGeometry(LatLng latLng, float radius){
+    GeofenceGeometry(LatLng latLng, float radius, int transitionType){
         mLatLng = latLng;
         mRadius = radius;
+        mTmTransitionType = transitionType;
     }
 
     GeofenceGeometry(Parcel in){
         mLatLng = (LatLng) in.readParcelable(LatLng.class.getClassLoader());
         mRadius = (float) in.readFloat();
+        mTmTransitionType = (int) in.readInt();
     }
 
     @Override
@@ -40,6 +44,7 @@ public class GeofenceGeometry implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeParcelable(mLatLng, flags);
         dest.writeFloat(mRadius);
+        dest.writeInt(mTmTransitionType);
     }
 
     public static final Parcelable.Creator<GeofenceGeometry> CREATOR = new Parcelable.Creator<GeofenceGeometry>() {
@@ -67,5 +72,13 @@ public class GeofenceGeometry implements Parcelable {
 
     public void setmRadius(float mRadius) {
         this.mRadius = mRadius;
+    }
+
+    public int getmTmTransitionType() {
+        return mTmTransitionType;
+    }
+
+    public void setmTmTransitionType(int mTmTransitionType) {
+        this.mTmTransitionType = mTmTransitionType;
     }
 }

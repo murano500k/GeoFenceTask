@@ -45,6 +45,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.concurrent.ExecutionException;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -101,9 +102,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     GeofenceTimeTable testGeoAddresesTable;
 
     {
-        testGeoAddresesTable = new GeofenceTimeTable();
-        java.util.Date temp = new java.util.Date();
-        testGeoAddresesTable.time = (temp.getTime());
+        //testGeoAddresesTable = new GeofenceTimeTable();
+        //java.util.Date temp = new java.util.Date();
+        //testGeoAddresesTable.time = (temp.getTime());
     }
 
 
@@ -169,6 +170,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mListGeofenceTableAll.clear();
                 mListGeofenceTableAll.addAll(mGeofenceDao.getAll());
                 mListGeofenceTableOnlyActive.addAll(mGeofenceDao.loadAllActive(true));
+
+
+                ArrayList<GeofenceTimeTable> gtt = new     ArrayList<GeofenceTimeTable>();
+                gtt.add(new GeofenceTimeTable(mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).uid,
+                        (new Date()).getTime(),
+                        mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).transitionType));
+                gtt.add(new GeofenceTimeTable(mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).uid,
+                        (new Date()).getTime(),
+                        mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).transitionType));
+
+                /*GeofenceTimeTable [] arrgtt = new GeofenceTimeTable[gtt.size()];
+                mGeofenceDao.insertAll(gtt.toArray(arrgtt));
+
+                int st = mGeofenceDao.getTimeTableByGeofenceTable(mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).uid).size();
+                Log.d("Test_tt", "st = " + st);*/
+
                 hendlerInitListUI.sendEmptyMessage(0);
             }
         });
@@ -188,8 +205,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     String url = (String) msg.obj;
                     if (GeoUtils.isNetworkConnected(MapsActivity.this))
                         getAddress(url);
-                    else
+                    else {
                         needUpdate = true;
+                    }
+                    Thread th = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                        }
+                    });
                 }
             }
         };
@@ -268,13 +292,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     final LatLng latLng = location.getmLatLng();
                     final float radius = location.getmRadius();
                     final String urlJson = getUrl(latLng);
+                    final int ttype =  location.getmTmTransitionType();
                     String address = getAddress(urlJson);
-
                     Thread th = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            GeofenceTable temp = getGeofenceRow(id++, latLng.latitude, latLng.longitude, radius,
-                                    Geofence.GEOFENCE_TRANSITION_ENTER, urlJson);
+                            GeofenceTable temp = getGeofenceRow(latLng.latitude, latLng.longitude, radius,
+                                    ttype, urlJson);
                             mGeofenceDao.insertAll(temp);
                             String tempUrl = urlJson;
                             android.os.Message msg = hendlerAddNewGeofence.obtainMessage(1, tempUrl);
@@ -286,9 +310,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         } else if(requestCode == MapsActivity.RESULT_SETTINGS_UPDATE) {
             if(resultCode == MapsActivity.RESULT_SETTINGS_DELETE) {
-                Log.d("Test_gt", "onActivityResult: RESULT_SETTINGS_DELETE");
                 final GeofenceTable gt = (GeofenceTable)data.getParcelableExtra(MapsActivity.GEOFENCE_TABLE);
-                Log.d("Test_gt", "mapsact gt uid = " + gt.uid);
                 Thread th = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -332,24 +354,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void sendGeo(int transitionType, int position) {
+    private void sendGeo(int id, int transitionType, LatLng position, float radius) {
         AppCompatActivity activity = this;
-
-        double latitude = listLocation.get(position).getLatitude();
-        double longitude = listLocation.get(position).getLongitude();
-        float radius = mRadius;
-
-
-        MyGeofence myGeofence = new MyGeofence(mId, latitude, longitude, radius, transitionType);
-
+        MyGeofence myGeofence = new MyGeofence(id, position.latitude, position.longitude, radius, transitionType);
         Intent geofencingService = new Intent(activity, GeofencingService.class);
         geofencingService.setAction(String.valueOf(Math.random()));
         geofencingService.putExtra(GeofencingService.EXTRA_ACTION, GeofencingService.Action.ADD);
         geofencingService.putExtra(GeofencingService.EXTRA_GEOFENCE, myGeofence);
 
         activity.startService(geofencingService);
+    }
 
-        mId++;
+    private void sendGeo(MyGeofence myGeofence) {
+        AppCompatActivity activity = this;
+        Intent geofencingService = new Intent(activity, GeofencingService.class);
+        geofencingService.setAction(String.valueOf(Math.random()));
+        geofencingService.putExtra(GeofencingService.EXTRA_ACTION, GeofencingService.Action.ADD);
+        geofencingService.putExtra(GeofencingService.EXTRA_GEOFENCE, myGeofence);
+
+        activity.startService(geofencingService);
     }
 
     protected class GetAddress extends AsyncTask<String, Void, String> {
@@ -376,7 +399,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             // Making a request to url and getting response
             Integer urlsCount = urls.length;
-            int k = 0;
+            GeofenceTable geofenceTable = null;
             for (String url : urls) {
                 String jsonStr = sh.makeServiceCall(url);
 
@@ -393,7 +416,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         //for (int i = 0; i < contacts.length(); i++) {
                         JSONObject c = contacts.getJSONObject(0);
                         String address = c.getString("formatted_address");
-                        GeofenceTable geofenceTable = mGeofenceDao.findByAddress(url);
+                        geofenceTable = mGeofenceDao.findByAddress(url);
 
                         if (geofenceTable != null) {
                             geofenceTable.address = address;
@@ -424,9 +447,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     .show();
                         }
                     });
-
                 }
             }
+
+//            if(geofenceTable != null && geofenceTable.isActive)
+//                sendGeo(geofenceTable.getMyGeofence());
+
             return null;
         }
 
@@ -443,7 +469,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    GeofenceTable getGeofenceRow(int id, double latitude, double longitude, float radius, int transitionType, String address) {
+    GeofenceTable getGeofenceRow(double latitude, double longitude, float radius, int transitionType, String address) {
         GeofenceTable geofenceRow = new GeofenceTable();
         geofenceRow.latitude = latitude;
         geofenceRow.longitude = longitude;

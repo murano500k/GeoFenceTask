@@ -29,6 +29,15 @@ public interface GeofenceDao {
     @Insert
     public void insertAll(GeofenceTable... geotables);
 
+    @Insert
+    public void insert(GeofenceTable geotable);
+
+    @Insert
+    public void insertAll(GeofenceTimeTable... geotime_tables);
+
+    @Insert
+    public void insert(GeofenceTimeTable geotime_table);
+
     @Query("SELECT * FROM geotable WHERE address LIKE :addrs LIMIT 1")
     public GeofenceTable findByAddress(String addrs);
 
@@ -40,6 +49,9 @@ public interface GeofenceDao {
 
     @Query("SELECT uid, address FROM geotable")
     public List<GeoAddresesTable> loadUidsAndAddresses();
+
+    @Query("SELECT * FROM geotable_time WHERE geotable_id LIKE :geo_id")
+    public List<GeofenceTimeTable> getTimeTableByGeofenceTable(int geo_id);
 
     @Update
     public void updateGeofenceTable(GeofenceTable... geotables);
