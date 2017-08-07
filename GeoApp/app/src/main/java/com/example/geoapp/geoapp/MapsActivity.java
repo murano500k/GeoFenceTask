@@ -159,8 +159,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         GeoDatabase.class, "geo-database").build();
                 mGeofenceDao = mDb.geofenceDao();
 
+
+
                 GeofenceTable[] tempGeofenceTable = new GeofenceTable[mGeofenceDao.getAll().size()];
                 tempGeofenceTable = mGeofenceDao.getAll().toArray(tempGeofenceTable);
+                for(GeofenceTable tempGt : tempGeofenceTable) {
+                    GeofenceTimeTable[] gttTemp = new GeofenceTimeTable[mGeofenceDao.getTimeTableByGeofenceTable(tempGt.uid).size()];
+                    gttTemp =  mGeofenceDao.getTimeTableByGeofenceTable(tempGt.uid).toArray(gttTemp);
+                    mGeofenceDao.deleteAll(gttTemp);
+                }
                 mGeofenceDao.deleteAll(tempGeofenceTable);
 
                 //mListGeofenceTableAll.addAll(mGeofenceDao.getAll());
@@ -180,11 +187,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         (new Date()).getTime(),
                         mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).transitionType));
 
-                /*GeofenceTimeTable [] arrgtt = new GeofenceTimeTable[gtt.size()];
+                GeofenceTimeTable [] arrgtt = new GeofenceTimeTable[gtt.size()];
                 mGeofenceDao.insertAll(gtt.toArray(arrgtt));
 
                 int st = mGeofenceDao.getTimeTableByGeofenceTable(mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).uid).size();
-                Log.d("Test_tt", "st = " + st);*/
+                Log.d("Test_tt", "st = " + st);
 
                 hendlerInitListUI.sendEmptyMessage(0);
             }
@@ -273,6 +280,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap = googleMap;
     }
 
+    private void deleteGeofenceTable(final GeofenceTable... geofenceTable) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for(GeofenceTable gt : geofenceTable) {
+                    GeofenceTimeTable[] gttTemp = new GeofenceTimeTable[mGeofenceDao.getTimeTableByGeofenceTable(gt.uid).size()];
+                    gttTemp =  mGeofenceDao.getTimeTableByGeofenceTable(gt.uid).toArray(gttTemp);
+                    mGeofenceDao.deleteAll(gttTemp);
+                }
+                mGeofenceDao.deleteAll(geofenceTable);
+            }
+        }).start();
+    }
+
     void updateGeofenceTableList() {
         mListGeofenceTableAll.clear();
         mListGeofenceTableAll.addAll(mGeofenceDao.getAll());
@@ -281,10 +302,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("Test_up", "test 1 --------*");
         if (data == null) {
+            Log.d("Test_up", "test 1 --------**");
             return;
         }
-
+        Log.d("Test_up", "test 1 --------");
         if (requestCode == MapsActivity.RESULT_CREATE_NEW_GEOFENCE) {
             if(resultCode == RESULT_OK){
                 GeofenceGeometry location = (GeofenceGeometry) data.getParcelableExtra(MapsActivity.GEOFENCE_GEOMETRY);
@@ -309,17 +332,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
         } else if(requestCode == MapsActivity.RESULT_SETTINGS_UPDATE) {
+            Log.d("Test_up", "test 1");
             if(resultCode == MapsActivity.RESULT_SETTINGS_DELETE) {
+                Log.d("Test_up", "test 2");
                 final GeofenceTable gt = (GeofenceTable)data.getParcelableExtra(MapsActivity.GEOFENCE_TABLE);
                 Thread th = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        mGeofenceDao.delete(mGeofenceDao.findByUid((new Integer(gt.uid)).toString()));
+                        deleteGeofenceTable(mGeofenceDao.findByUid((new Integer(gt.uid)).toString()));
                         updateGeofenceTableList();
                         hendlerInitListUI.sendEmptyMessage(MapsActivity.UPDATE_LIST);
                     }
                 });
                 th.start();
+            } else if(resultCode == MapsActivity.RESULT_SETTINGS_UPDATE) {
+                Log.d("Test_up", "test 3");
             }
         }
 
@@ -607,6 +634,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             str[i] = gt.address;
         }
         //(new GetAddress(null)).execute(str);
+    }
+
+    static public void updateDB (final GeofenceTable... gt) {
+        (new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mGeofenceDao.updateGeofenceTable(gt);
+            }
+        })).start();
     }
 
 }

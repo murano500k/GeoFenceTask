@@ -28,24 +28,24 @@
 
         <activity
             android:name=".MapsActivity"
-            android:theme="@style/NoActionBar">
+            android:theme="@style/YesActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".SettingsActivity"
+        <activity
+            android:name=".SettingsActivity"
             android:parentActivityName=".MapsActivity"
-            android:theme="@style/NoActionBar">
+            android:theme="@style/YesActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MapsActivity" />
         </activity>
-
-        <activity android:name=".CurrentLocationActivity"
-            android:theme="@style/NoActionBar"/>
+        <activity
+            android:name=".CurrentLocationActivity"
+            android:theme="@style/YesActionBar" />
         <activity android:name=".MenuActivity" />
 
         <service
@@ -62,7 +62,7 @@
             </intent-filter>
         </receiver>
 
-
+        <activity android:name=".GeoTimeTableActivity"></activity>
     </application>
 
 </manifest>

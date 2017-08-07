@@ -64,4 +64,10 @@ public interface GeofenceDao {
 
     @Delete
     public void deleteAll(GeofenceTable... geotable);
+
+    @Delete
+    public void delete(GeofenceTimeTable geotable);
+
+    @Delete
+    public void deleteAll(GeofenceTimeTable... geotable);
 }

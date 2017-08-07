@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- These settings headers are only used on tablets. -->
+    <PreferenceCategory
+        android:title="@string/menu_settings_pref">
+
+    <SwitchPreference
+        android:key="active_pref"
+        android:enabled="true"
+        android:summary="Active geofence"
+        android:title="Active">
+    </SwitchPreference>
+
+    <CheckBoxPreference
+        android:key="notif_pref"
+        android:enabled="true"
+        android:summary="Enable notifications"
+        android:title="Notifications">
+    </CheckBoxPreference>
+
+    <CheckBoxPreference
+        android:key="notif_hide_pref"
+        android:summary="Enable hide notifications"
+        android:title="Notifications hide">
+    </CheckBoxPreference>
+
+    <EditTextPreference
+        android:capitalize="words"
+        android:inputType="number"
+        android:key="radius_pref"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/text_radius" />
+</PreferenceCategory>
+    <PreferenceCategory
+        android:title="@string/transition_settings">
+        <CheckBoxPreference
+            android:key="enter_pref"
+            android:summary="Enter to geofence"
+            android:title="Enter">
+        </CheckBoxPreference>
+
+        <CheckBoxPreference
+            android:key="exit_pref"
+            android:summary="Exit from geofence"
+            android:title="Exit">
+        </CheckBoxPreference>
+
+        <CheckBoxPreference
+            android:key="dwell_pref"
+            android:summary="Dwell"
+            android:title="Dwell">
+        </CheckBoxPreference>
+    </PreferenceCategory>
+</PreferenceScreen>
