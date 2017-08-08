@@ -14,7 +14,15 @@
 
 
         <TextView
-            android:id="@+id/info_text"
+            android:id="@+id/info_text_time_enter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Test CardView"
+            android:layout_centerInParent="true"
+            android:textSize="18sp"
+            android:textColor="#fff"/>
+        <TextView
+            android:id="@+id/info_text_time_exit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Test CardView"

@@ -44,8 +44,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -230,8 +232,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         list = (ListView) findViewById(R.id.list_geofences);
         list.setAdapter(customListAdapter);
 
-        //convertLatLngToAddress();
-
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
@@ -400,6 +400,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         geofencingService.putExtra(GeofencingService.EXTRA_GEOFENCE, myGeofence);
 
         activity.startService(geofencingService);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
     }
 
     protected class GetAddress extends AsyncTask<String, Void, String> {
@@ -637,12 +642,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     static public void updateDB (final GeofenceTable... gt) {
+
         (new Thread(new Runnable() {
             @Override
             public void run() {
+                Log.d("Test_upd", "updateDB");
                 mGeofenceDao.updateGeofenceTable(gt);
             }
         })).start();
     }
+
+
 
 }

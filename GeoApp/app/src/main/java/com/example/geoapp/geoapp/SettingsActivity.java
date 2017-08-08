@@ -58,7 +58,7 @@ public class SettingsActivity extends AppCompatActivity {
             setResult(MapsActivity.RESULT_SETTINGS_DELETE, intent);
             finish();
         } else if(item.getItemId() == android.R.id.home) {
-
+            MapsActivity.updateDB(gt);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -71,7 +71,6 @@ public class SettingsActivity extends AppCompatActivity {
         intent.setExtrasClassLoader(GeofenceTable.class.getClassLoader());
         setResult(MapsActivity.RESULT_SETTINGS_UPDATE, intent);
         finish();*/
-        MapsActivity.updateDB(gt);
     }
 
     public static class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {

@@ -10,57 +10,57 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.geoapp.geostorage.GeofenceTimeTable;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class GeoTimeTableActivity extends AppCompatActivity {
+
+    private RecyclerView mRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_geo_time_table);
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view_time);
+
     }
 
     public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
 
-        private List<AlphabeticIndex.Record> records;
+        private ArrayList<GeofenceTimeTable> timeTable;
 
-        public RecyclerViewAdapter(List<AlphabeticIndex.Record> records) {
-            this.records = records;
+        public RecyclerViewAdapter(ArrayList<GeofenceTimeTable> timeTable) {
+            this.timeTable = timeTable;
         }
 
-        /**
-         * Создание новых View и ViewHolder элемента списка, которые впоследствии могут переиспользоваться.
-         */
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
             View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.recyclerview_item, viewGroup, false);
             return new ViewHolder(v);
         }
 
-        /**
-         * Заполнение виджетов View данными из элемента списка с номером i
-         */
         @Override
         public void onBindViewHolder(ViewHolder viewHolder, int i) {
-            AlphabeticIndex.Record record = records.get(i);
+            GeofenceTimeTable record = timeTable.get(i);
             //viewHolder.name.setText(record.getName());
         }
 
         @Override
         public int getItemCount() {
-            return records.size();
+            return timeTable.size();
         }
 
-        /**
-         * Реализация класса ViewHolder, хранящего ссылки на виджеты.
-         */
         class ViewHolder extends RecyclerView.ViewHolder {
-            private TextView name;
+            private TextView time_enter;
+            private TextView time_exit;
             private ImageView icon;
 
             public ViewHolder(View itemView) {
                 super(itemView);
-                //name = (TextView) itemView.findViewById(R.id.recyclerViewItemName);
+                time_enter = (TextView) itemView.findViewById(R.id.info_text_time_enter);
+                time_exit = (TextView) itemView.findViewById(R.id.info_text_time_exit);
                 //icon = (ImageView) itemView.findViewById(R.id.recyclerViewItemIcon);
             }
         }
