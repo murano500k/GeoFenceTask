@@ -37,9 +37,4 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
     </ListView>
-
-
-
-
-
 </android.support.constraint.ConstraintLayout>

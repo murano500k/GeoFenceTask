@@ -51,7 +51,7 @@
         android:orientation="vertical"
         android:layout_weight="2">
 
-            <ListView
+            <!--<ListView
                 android:id="@+id/list_geofences"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -60,7 +60,13 @@
                 android:divider="@android:color/transparent"
                 android:dividerHeight="10dp"
                 >
-            </ListView>
+            </ListView>-->
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view_geotable"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:paddingTop="10dp"/>
 
         </LinearLayout>
 
