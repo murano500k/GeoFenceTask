@@ -671,9 +671,8 @@ public class MapsActivity extends LifecycleActivity implements OnMapReadyCallbac
 
             @Override
             public void onClick(View v) {
-                float radius = (showAllGeofenceInList ? mListGeofenceTableAll : mListGeofenceTableOnlyActive).get(pos).radius;
-                LatLng geofenceLatLng = (showAllGeofenceInList ? mListGeofenceTableAll : mListGeofenceTableOnlyActive).
-                        get(pos).getMyGeofence().getLatLng();
+                float radius = geoTable.get(getPosition()).radius;
+                LatLng geofenceLatLng = geoTable.get(getPosition()).getMyGeofence().getLatLng();
                 int opaqueRed = Color.argb(125, 0, 200, 0);
                 mMap.addCircle(new CircleOptions().center(geofenceLatLng)
                         .radius(radius).fillColor(opaqueRed).strokeColor(Color.BLUE).strokeWidth(2));
@@ -684,7 +683,7 @@ public class MapsActivity extends LifecycleActivity implements OnMapReadyCallbac
             @Override
             public boolean onLongClick(View v) {
                 Intent intent = new Intent(MapsActivity.this, SettingsActivity.class);
-                intent.putExtra(MapsActivity.GEOFENCE_TABLE, (showAllGeofenceInList ? mListGeofenceTableAll : mListGeofenceTableOnlyActive).get(pos));
+                intent.putExtra(MapsActivity.GEOFENCE_TABLE, (geoTable.get(getPosition())));
                 startActivityForResult(intent, MapsActivity.RESULT_SETTINGS_UPDATE);
                 return false;
             }
