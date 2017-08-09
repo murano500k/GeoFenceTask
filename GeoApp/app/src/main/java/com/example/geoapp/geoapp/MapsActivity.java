@@ -1,6 +1,9 @@
 package com.example.geoapp.geoapp;
 
 import android.app.ProgressDialog;
+import android.arch.lifecycle.LifecycleActivity;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +12,7 @@ import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.provider.Settings;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -45,9 +49,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MapsActivity extends LifecycleActivity implements OnMapReadyCallback  {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
     //ListView list;
@@ -125,14 +130,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+
+        mGeoDatabaseManager = ViewModelProviders.of(this).get(GeoDatabaseManager.class);
         Thread threadInitDB = new Thread(new Runnable() {
             @Override
             public void run() {
-                mGeoDatabaseManager = GeoDatabaseManager.getInstanse(getApplication());
+               /* mGeoDatabaseManager = GeoDatabaseManager.getInstanse(getApplication());
                 mGeofenceDao = mGeoDatabaseManager.getGeofenceDao();
                 mListGeofenceTableAll.addAll(mGeoDatabaseManager.mListGeofenceTableAll);
                 mListGeofenceTableOnlyActive.addAll(mGeoDatabaseManager.mListGeofenceTableOnlyActive);
-                hendlerInitListUI.sendEmptyMessage(0);
+                hendlerInitListUI.sendEmptyMessage(0);*/
+                mGeoDatabaseManager.testInit();
             }
         });
         threadInitDB.start();
@@ -140,7 +148,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         hendlerInitListUI = new Handler() {
             public void handleMessage(android.os.Message msg) {
                 if (msg.what == MapsActivity.UPDATE_LIST) {
-                    updateList();
+                    //updateList();
                 }
             }
         };
@@ -164,13 +172,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         };
 
-        customListAdapter = customListAdapterForAll = new GeoTableAdapter(this, mListGeofenceTableAll);
-        customListAdapterForActive = new GeoTableAdapter(this, mListGeofenceTableOnlyActive);
+
+
+        //customListAdapter = customListAdapterForAll = new GeoTableAdapter(this, mListGeofenceTableAll);
+        //customListAdapterForActive = new GeoTableAdapter(this, mListGeofenceTableOnlyActive);
         ///////////////////////////////////////////////////////////////////////////
         list = (RecyclerView) findViewById(R.id.recycler_view_geotable);
         list.setLayoutManager(new LinearLayoutManager(this));
-        geoTableAdapter = new GeoTableAdapter(MapsActivity.this, mListGeofenceTableAll);
+        //list.setAdapter(customListAdapter);
+        //geoTableAdapter = new GeoTableAdapter(MapsActivity.this, mListGeofenceTableAll);
+        //list.setAdapter(geoTableAdapter);
+        geoTableAdapter = new GeoTableAdapter(this, new ArrayList<GeofenceTable>());
         list.setAdapter(geoTableAdapter);
+        mGeoDatabaseManager.getListGeofenceTable(showAllGeofenceInList).observe(MapsActivity.this,
+                new Observer<List<GeofenceTable>>() {
+
+                    @Override
+                    public void onChanged(@Nullable List<GeofenceTable> geofenceTables) {
+                        geoTableAdapter.addItems(geofenceTables);
+                    }
+                });
 
         addGeofenceButton = (FloatingActionButton) findViewById(R.id.add_geofence);
         addGeofenceButton.setOnClickListener(new View.OnClickListener() {
@@ -217,8 +238,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     final float radius = location.getmRadius();
                     final String urlJson = getUrl(latLng);
                     final int ttype =  location.getmTmTransitionType();
-                    String address = getAddress(urlJson);
-                    Thread th = new Thread(new Runnable() {
+                    /*String address = getAddress(urlJson);
+                    mGeoDatabaseManager.insert(getGeofenceRow(latLng.latitude, latLng.longitude, radius,
+                            ttype, urlJson));*/
+                      Thread th = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String address = getAddressTest(urlJson);
+                            mGeoDatabaseManager.insert(getGeofenceRow(latLng.latitude, latLng.longitude, radius,
+                                    ttype, address));
+                        }
+                    });
+                    th.start();
+                  /*  Thread th = new Thread(new Runnable() {
                         @Override
                         public void run() {
                             GeofenceTable temp = getGeofenceRow(latLng.latitude, latLng.longitude, radius,
@@ -229,7 +261,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             hendlerAddNewGeofence.sendMessage(msg);
                         }
                     });
-                    th.start();
+                    th.start();*/
                 }
             }
         } else if(requestCode == MapsActivity.RESULT_SETTINGS_UPDATE) {
@@ -267,7 +299,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void sendGeo(MyGeofence myGeofence) {
-        AppCompatActivity activity = this;
+        LifecycleActivity activity = this;
         Intent geofencingService = new Intent(activity, GeofencingService.class);
         geofencingService.setAction(String.valueOf(Math.random()));
         geofencingService.putExtra(GeofencingService.EXTRA_ACTION, GeofencingService.Action.ADD);
@@ -365,14 +397,69 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            if (MapsActivity.customListAdapter != null) {
+            /*if (MapsActivity.customListAdapter != null) {
                 updateList();
-            }
+            }*/
 
             if (pDialog.isShowing()) {
                 pDialog.dismiss();
             }
         }
+    }
+
+    String getAddressTest(String... urls) {
+        HttpHandler sh = new HttpHandler();
+        String address = null;
+        // Making a request to url and getting response
+        Integer urlsCount = urls.length;
+        GeofenceTable geofenceTable = null;
+        for (String url : urls) {
+            String jsonStr = sh.makeServiceCall(url);
+
+            Log.e(TAG, "Response from url: " + jsonStr);
+
+            if (jsonStr != null) {
+                try {
+                    JSONObject jsonObj = new JSONObject(jsonStr);
+
+                    // Getting JSON Array node
+                    JSONArray contacts = jsonObj.getJSONArray("results");
+
+                    // looping through All Contacts
+                    //for (int i = 0; i < contacts.length(); i++) {
+                    JSONObject c = contacts.getJSONObject(0);
+                    address = c.getString("formatted_address");
+
+                } catch (final JSONException e) {
+                    Log.e(TAG, "Json parsing error: " + e.getMessage());
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(),
+                                    "Json parsing error: " + e.getMessage(),
+                                    Toast.LENGTH_LONG)
+                                    .show();
+                        }
+                    });
+                }
+            } else {
+                Log.e(TAG, "Couldn't get json from server.");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(),
+                                "Couldn't get json from server. Check LogCat for possible errors!",
+                                Toast.LENGTH_LONG)
+                                .show();
+                    }
+                });
+            }
+        }
+
+//            if(geofenceTable != null && geofenceTable.isActive)
+//                sendGeo(geofenceTable.getMyGeofence());
+
+        return address;
     }
 
     GeofenceTable getGeofenceRow(double latitude, double longitude, float radius, int transitionType, String address) {
@@ -439,7 +526,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            updateList();
+            //updateList();
             if (pDialog.isShowing()) {
                 pDialog.dismiss();
             }
@@ -479,10 +566,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             startActivity(intent);
         } else if (item.getItemId() == R.id.menu_all) {
             item.setChecked(true);
-            (new UpdateGeoArraysFromDB()).execute((showAllGeofenceInList = true));
+            //(new UpdateGeoArraysFromDB()).execute((showAllGeofenceInList = true));
         } else if (item.getItemId() == R.id.menu_active) {
             item.setChecked(true);
-            (new UpdateGeoArraysFromDB()).execute((showAllGeofenceInList = false));
+            //(new UpdateGeoArraysFromDB()).execute((showAllGeofenceInList = false));
         }
         return true;
     }
@@ -523,10 +610,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public class GeoTableAdapter extends RecyclerView.Adapter<GeoTableAdapter.ItemViewHolder> {
 
-        private final ArrayList<GeofenceTable> geoTable;
+        private List<GeofenceTable> geoTable;
         private Context context;
 
-        public GeoTableAdapter(Context context, ArrayList<GeofenceTable> geoTable) {
+        public GeoTableAdapter(Context context, List<GeofenceTable> geoTable) {
             this.context = context;
             this.geoTable = geoTable;
         }
@@ -560,6 +647,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         public int getItemCount() {
             return (null != geoTable ? geoTable.size() : 0);
+        }
+
+        public void addItems(List<GeofenceTable> geofenceTable) {
+            this.geoTable = geofenceTable;
+            notifyDataSetChanged();
         }
 
         class ItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{

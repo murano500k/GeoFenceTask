@@ -36,25 +36,25 @@ public class GeoDatabaseManager extends AndroidViewModel{
 
     private static GeoDatabaseManager instanse = null;
 
-    private GeoDatabaseManager(Application application) {
+    public GeoDatabaseManager(Application application) {
         super(application);
         mDb = Room.databaseBuilder(application.getApplicationContext(),
                 GeoDatabase.class, "geo-database").build();
         mGeofenceDao = mDb.geofenceDao();
-        testInit();
+        //testInit();
         listGeofenceTableAll = mGeofenceDao.getAllLiveData();
         listGeofenceTableOnlyActive = mGeofenceDao.getAllActiveLiveData(true);
     }
 
     public LiveData<List<GeofenceTable>> getListGeofenceTable(boolean all) {
-        return all ? listGeofenceTableAll : listGeofenceTableOnlyActive;
+        return listGeofenceTableAll;
     }
 
-    public static GeoDatabaseManager getInstanse(Application application) {
+  /*  public static GeoDatabaseManager getInstanse(Application application) {
         if(instanse == null)
             instanse = new GeoDatabaseManager(application);
         return instanse;
-    }
+    }*/
 
     public void deleteGeoTable(GeofenceTable... params) {
         (new GeofenceTable()).equals(params);
@@ -70,6 +70,18 @@ public class GeoDatabaseManager extends AndroidViewModel{
                 mGeofenceDao.deleteAll(params);
             return null;
         }
+    }
+
+    public void insert(GeofenceTable param) {
+        mGeofenceDao.insertAll(param);
+    }
+
+    public void insertAll(GeofenceTable... param) {
+        mGeofenceDao.insertAll(param);
+    }
+
+    public GeofenceDao getDao() {
+        return mGeofenceDao;
     }
 
     public void open(final Context context) {
