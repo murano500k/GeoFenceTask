@@ -1,5 +1,6 @@
 package com.example.geoapp.geostorage;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
@@ -17,11 +18,17 @@ public interface GeofenceDao {
     @Query("SELECT * FROM geotable")
     public List<GeofenceTable> getAll();
 
+    @Query("SELECT * FROM geotable")
+    public LiveData<List<GeofenceTable>> getAllLiveData();
+
     @Query("SELECT * FROM geotable WHERE uid IN (:geofenceIds)")
     public List<GeofenceTable> loadAllByIds(int[] geofenceIds);
 
     @Query("SELECT * FROM geotable WHERE is_active IN (:active)")
-    public List<GeofenceTable> loadAllActive(boolean active);
+    public List<GeofenceTable> getAllActive(boolean active);
+
+    @Query("SELECT * FROM geotable WHERE is_active IN (:active)")
+    public LiveData<List<GeofenceTable>> getAllActiveLiveData(boolean active);
 
     @Query("SELECT address FROM geotable")
     public List<String> loadAllAddresses();

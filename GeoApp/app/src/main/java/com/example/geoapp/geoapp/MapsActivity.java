@@ -1,13 +1,8 @@
 package com.example.geoapp.geoapp;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.app.ProgressDialog;
-import android.arch.persistence.room.Room;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.location.Location;
@@ -25,10 +20,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,10 +44,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -110,36 +100,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mListGeofenceTableOnlyActive = new ArrayList<GeofenceTable>();
     }
 
-    GeofenceTimeTable testGeoAddresesTable;
-
-    {
-        //testGeoAddresesTable = new GeofenceTimeTable();
-        //java.util.Date temp = new java.util.Date();
-        //testGeoAddresesTable.time = (temp.getTime());
-    }
 
 
-    void testInit() {
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.429557, 30.518141, 15, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.419827, 30.484082, 30, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.444993, 30.501386, 45, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.439664, 30.509769, 10, Geofence.GEOFENCE_TRANSITION_ENTER, null, false));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.423350, 30.479781, 25, Geofence.GEOFENCE_TRANSITION_ENTER, null, false));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.445824, 30.512964, 35, Geofence.GEOFENCE_TRANSITION_ENTER, null, false));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.418313, 30.486337, 18, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.424849, 30.506372, 50, Geofence.GEOFENCE_TRANSITION_ENTER, null, false));
-    }
+    private GeoDatabaseManager mGeoDatabaseManager = null;
 
-    GeofenceTable getGeofenceRowTest(int id, double latitude, double longitude, float radius, int transitionType, String address, Boolean is_active) {
-        GeofenceTable geofenceRow = new GeofenceTable();
-        geofenceRow.latitude = latitude;
-        geofenceRow.longitude = longitude;
-        geofenceRow.radius = radius;
-        geofenceRow.transitionType = transitionType;
-        geofenceRow.address = address != null ? address : startUrl + latitude + commaUrl + longitude + endUrl;
-        geofenceRow.isActive = is_active;
-        return geofenceRow;
-    }
 
     private void updateList() {
         if (showAllGeofenceInList) {
@@ -161,49 +125,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        testInit();
-
         Thread threadInitDB = new Thread(new Runnable() {
             @Override
             public void run() {
-                mDb = Room.databaseBuilder(getApplicationContext(),
-                        GeoDatabase.class, "geo-database").build();
-                mGeofenceDao = mDb.geofenceDao();
-
-
-
-                GeofenceTable[] tempGeofenceTable = new GeofenceTable[mGeofenceDao.getAll().size()];
-                tempGeofenceTable = mGeofenceDao.getAll().toArray(tempGeofenceTable);
-                for(GeofenceTable tempGt : tempGeofenceTable) {
-                    GeofenceTimeTable[] gttTemp = new GeofenceTimeTable[mGeofenceDao.getTimeTableByGeofenceTable(tempGt.uid).size()];
-                    gttTemp =  mGeofenceDao.getTimeTableByGeofenceTable(tempGt.uid).toArray(gttTemp);
-                    mGeofenceDao.deleteAll(gttTemp);
-                }
-                mGeofenceDao.deleteAll(tempGeofenceTable);
-
-                //mListGeofenceTableAll.addAll(mGeofenceDao.getAll());
-
-                GeofenceTable[] temp = new GeofenceTable[mListGeofenceTableAll.size()];
-                mGeofenceDao.insertAll(mListGeofenceTableAll.toArray(temp));
-                mListGeofenceTableAll.clear();
-                mListGeofenceTableAll.addAll(mGeofenceDao.getAll());
-                mListGeofenceTableOnlyActive.addAll(mGeofenceDao.loadAllActive(true));
-
-
-                ArrayList<GeofenceTimeTable> gtt = new     ArrayList<GeofenceTimeTable>();
-                gtt.add(new GeofenceTimeTable(mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).uid,
-                        (new Date()).getTime(),
-                        mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).transitionType));
-                gtt.add(new GeofenceTimeTable(mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).uid,
-                        (new Date()).getTime(),
-                        mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).transitionType));
-
-                GeofenceTimeTable [] arrgtt = new GeofenceTimeTable[gtt.size()];
-                mGeofenceDao.insertAll(gtt.toArray(arrgtt));
-
-                int st = mGeofenceDao.getTimeTableByGeofenceTable(mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).uid).size();
-                Log.d("Test_tt", "st = " + st);
-
+                mGeoDatabaseManager = GeoDatabaseManager.getInstanse(getApplication());
+                mGeofenceDao = mGeoDatabaseManager.getGeofenceDao();
+                mListGeofenceTableAll.addAll(mGeoDatabaseManager.mListGeofenceTableAll);
+                mListGeofenceTableOnlyActive.addAll(mGeoDatabaseManager.mListGeofenceTableOnlyActive);
                 hendlerInitListUI.sendEmptyMessage(0);
             }
         });
@@ -243,40 +171,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         list.setLayoutManager(new LinearLayoutManager(this));
         geoTableAdapter = new GeoTableAdapter(MapsActivity.this, mListGeofenceTableAll);
         list.setAdapter(geoTableAdapter);
-
-
-        ///////////////////////////////////////////////////////////////////////////
-//        list = (ListView) findViewById(R.id.list_geofences);
-//        list.setAdapter(customListAdapter);
-//
-//        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view,
-//                                    int position, long id) {
-//                // TODO Auto-generated method stub
-//                float radius = mListGeofenceTableAll.get(position).radius;
-//                LatLng geofenceLatLng = mListGeofenceTableAll.get(position).getMyGeofence().getLatLng();
-//                int opaqueRed = Color.argb(125, 0, 200, 0);
-//                mMap.addCircle(new CircleOptions().center(geofenceLatLng)
-//                        .radius(radius).fillColor(opaqueRed).strokeColor(Color.BLUE).strokeWidth(2));
-//                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(geofenceLatLng, DEFAULT_ZOOM));
-//                mMap.addMarker(new MarkerOptions().position(geofenceLatLng));
-//            }
-//        });
-//
-//        list.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-//            @Override
-//            public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
-//                                           int pos, long id) {
-//                // TODO Auto-generated method stub
-//                Intent intent = new Intent(MapsActivity.this, SettingsActivity.class);
-//                Log.d("Test_gt", "mapsact set gt uid = " + (showAllGeofenceInList ? mListGeofenceTableAll : mListGeofenceTableOnlyActive).get(pos).uid);
-//                intent.putExtra(MapsActivity.GEOFENCE_TABLE, (showAllGeofenceInList ? mListGeofenceTableAll : mListGeofenceTableOnlyActive).get(pos));
-//                startActivityForResult(intent, MapsActivity.RESULT_SETTINGS_UPDATE);
-//                return true;
-//            }
-//        });
 
         addGeofenceButton = (FloatingActionButton) findViewById(R.id.add_geofence);
         addGeofenceButton.setOnClickListener(new View.OnClickListener() {
@@ -352,7 +246,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         mListGeofenceTableAll.addAll(mGeofenceDao.getAll());
                         mListGeofenceTableOnlyActive.clear();
                         //mListGeofenceTableOnlyActive.addAll(GeoDatabaseManager.getGeofenceTables(false));
-                        mListGeofenceTableOnlyActive.addAll(mGeofenceDao.loadAllActive(true));
+                        mListGeofenceTableOnlyActive.addAll(mGeofenceDao.getAllActive(true));
                         hendlerInitListUI.sendEmptyMessage(MapsActivity.UPDATE_LIST);
                     }
                 });
@@ -516,7 +410,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        GeoDatabaseManager.close();
+        mGeoDatabaseManager.close();
     }
 
     protected class UpdateGeoArraysFromDB extends AsyncTask<Boolean, Void, Void> {
@@ -528,7 +422,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mListGeofenceTableAll.addAll(mGeofenceDao.getAll());
             } else {
                 mListGeofenceTableOnlyActive.clear();
-                mListGeofenceTableOnlyActive.addAll(mGeofenceDao.loadAllActive(true));
+                mListGeofenceTableOnlyActive.addAll(mGeofenceDao.getAllActive(true));
             }
             return null;
         }
