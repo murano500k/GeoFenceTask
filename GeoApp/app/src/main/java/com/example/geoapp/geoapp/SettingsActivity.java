@@ -18,6 +18,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import com.example.geoapp.geostorage.GeoDatabaseManager;
 import com.example.geoapp.geostorage.GeofenceTable;
 import com.google.android.gms.location.Geofence;
 
@@ -58,7 +59,11 @@ public class SettingsActivity extends AppCompatActivity {
             setResult(MapsActivity.RESULT_SETTINGS_DELETE, intent);
             finish();
         } else if(item.getItemId() == android.R.id.home) {
-            MapsActivity.updateDB(gt);
+            Intent intent = new Intent();
+            intent.putExtra(MapsActivity.GEOFENCE_TABLE, gt);
+            intent.setExtrasClassLoader(GeofenceTable.class.getClassLoader());
+            setResult(MapsActivity.RESULT_SETTINGS_UPDATE, intent);
+            finish();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -66,7 +71,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        /*Intent intent = new Intent();
+       /* Intent intent = new Intent();
         intent.putExtra(MapsActivity.GEOFENCE_TABLE, gt);
         intent.setExtrasClassLoader(GeofenceTable.class.getClassLoader());
         setResult(MapsActivity.RESULT_SETTINGS_UPDATE, intent);

@@ -3,9 +3,12 @@ package com.example.geoapp.geostorage;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.ViewModelProviders;
 import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 
 import com.google.android.gms.location.Geofence;
@@ -22,7 +25,7 @@ import java.util.List;
 public class GeoDatabaseManager extends AndroidViewModel{
     static private final Object mutex = new Object();
 
-    private GeoDatabase mDb;
+    private static GeoDatabase mDb;
     private GeofenceDao mGeofenceDao;
     {
         mDb = null;
@@ -38,8 +41,7 @@ public class GeoDatabaseManager extends AndroidViewModel{
 
     public GeoDatabaseManager(Application application) {
         super(application);
-        mDb = Room.databaseBuilder(application.getApplicationContext(),
-                GeoDatabase.class, "geo-database").build();
+        mDb = GeoDatabase.getInstance(application.getApplicationContext());
         mGeofenceDao = mDb.geofenceDao();
         //testInit();
         listGeofenceTableAll = mGeofenceDao.getAllLiveData();
@@ -50,17 +52,17 @@ public class GeoDatabaseManager extends AndroidViewModel{
         return listGeofenceTableAll;
     }
 
-  /*  public static GeoDatabaseManager getInstanse(Application application) {
+   public static GeoDatabaseManager getInstanse(@NonNull FragmentActivity activity) {
         if(instanse == null)
-            instanse = new GeoDatabaseManager(application);
+            instanse = ViewModelProviders.of(activity).get(GeoDatabaseManager.class);
         return instanse;
-    }*/
-
-    public void deleteGeoTable(GeofenceTable... params) {
-        (new GeofenceTable()).equals(params);
     }
 
-    private class DeleteGeoRow extends AsyncTask<GeofenceTable, Void, Void> {
+    public void deleteGeoTable(GeofenceTable... params) {
+        (new DeleteGeoTableRow()).execute(params);
+    }
+
+    private class DeleteGeoTableRow extends AsyncTask<GeofenceTable, Void, Void> {
 
         @Override
         protected Void doInBackground(GeofenceTable... params) {
@@ -72,6 +74,39 @@ public class GeoDatabaseManager extends AndroidViewModel{
         }
     }
 
+    public void deleteGeoTime(GeofenceTimeTable... params) {
+        (new DeleteGeoTimeRow()).execute(params);
+    }
+
+    private class DeleteGeoTimeRow extends AsyncTask<GeofenceTimeTable, Void, Void> {
+
+        @Override
+        protected Void doInBackground(GeofenceTimeTable... params) {
+            if(params.length == 1)
+                mGeofenceDao.delete(params[0]);
+            else
+                mGeofenceDao.deleteAll(params);
+            return null;
+        }
+    }
+
+    public void updateGeoTable(GeofenceTable... params) {
+        (new UpdateGeoTableRow()).execute(params);
+    }
+
+    private class UpdateGeoTableRow extends AsyncTask<GeofenceTable, Void, Void> {
+
+        @Override
+        protected Void doInBackground(GeofenceTable... params) {
+            if(params.length == 1)
+                mGeofenceDao.updateGeofenceRow(params[0]);
+            else
+                mGeofenceDao.updateGeofenceTable(params);
+            return null;
+        }
+    }
+
+
     public void insert(GeofenceTable param) {
         mGeofenceDao.insertAll(param);
     }
@@ -81,6 +116,8 @@ public class GeoDatabaseManager extends AndroidViewModel{
     }
 
     public GeofenceDao getDao() {
+        if(mGeofenceDao == null)
+            mGeofenceDao = mDb.geofenceDao();
         return mGeofenceDao;
     }
 
@@ -120,14 +157,14 @@ public class GeoDatabaseManager extends AndroidViewModel{
     private static final String endUrl = "&sensor=true";
     private int id = 0;
     public void testInit() {
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.429557, 30.518141, 15, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.419827, 30.484082, 30, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.444993, 30.501386, 45, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.439664, 30.509769, 10, Geofence.GEOFENCE_TRANSITION_ENTER, null, false));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.423350, 30.479781, 25, Geofence.GEOFENCE_TRANSITION_ENTER, null, false));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.445824, 30.512964, 35, Geofence.GEOFENCE_TRANSITION_ENTER, null, false));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.418313, 30.486337, 18, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
-        mListGeofenceTableAll.add(getGeofenceRowTest(id++, 50.424849, 30.506372, 50, Geofence.GEOFENCE_TRANSITION_ENTER, null, false));
+        mListGeofenceTableAll.add(getGeofenceRowTest(50.429557, 30.518141, 15, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
+        mListGeofenceTableAll.add(getGeofenceRowTest(50.419827, 30.484082, 30, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
+        mListGeofenceTableAll.add(getGeofenceRowTest(50.444993, 30.501386, 45, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
+        mListGeofenceTableAll.add(getGeofenceRowTest(50.439664, 30.509769, 10, Geofence.GEOFENCE_TRANSITION_ENTER, null, false));
+        mListGeofenceTableAll.add(getGeofenceRowTest(50.423350, 30.479781, 25, Geofence.GEOFENCE_TRANSITION_ENTER, null, false));
+        mListGeofenceTableAll.add(getGeofenceRowTest(50.445824, 30.512964, 35, Geofence.GEOFENCE_TRANSITION_ENTER, null, false));
+        mListGeofenceTableAll.add(getGeofenceRowTest(50.418313, 30.486337, 18, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
+        mListGeofenceTableAll.add(getGeofenceRowTest(50.424849, 30.506372, 50, Geofence.GEOFENCE_TRANSITION_ENTER, null, false));
 
         GeofenceTable[] tempGeofenceTable = new GeofenceTable[mGeofenceDao.getAll().size()];
         tempGeofenceTable = mGeofenceDao.getAll().toArray(tempGeofenceTable);
@@ -162,7 +199,7 @@ public class GeoDatabaseManager extends AndroidViewModel{
         Log.d("Test_tt", "st = " + st);
     }
 
-    GeofenceTable getGeofenceRowTest(int id, double latitude, double longitude, float radius, int transitionType, String address, Boolean is_active) {
+    GeofenceTable getGeofenceRowTest(double latitude, double longitude, float radius, int transitionType, String address, Boolean is_active) {
         GeofenceTable geofenceRow = new GeofenceTable();
         geofenceRow.latitude = latitude;
         geofenceRow.longitude = longitude;

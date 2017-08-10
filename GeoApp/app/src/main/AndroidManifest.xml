@@ -28,7 +28,8 @@
 
         <activity
             android:name=".MapsActivity"
-            android:theme="@style/YesActionBar">
+            android:theme="@style/YesActionBar"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
