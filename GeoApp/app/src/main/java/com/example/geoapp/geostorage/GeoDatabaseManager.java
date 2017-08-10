@@ -49,7 +49,7 @@ public class GeoDatabaseManager extends AndroidViewModel{
     }
 
     public LiveData<List<GeofenceTable>> getListGeofenceTable(boolean all) {
-        return listGeofenceTableAll;
+        return all ? listGeofenceTableAll : listGeofenceTableOnlyActive;
     }
 
    public static GeoDatabaseManager getInstanse(@NonNull FragmentActivity activity) {
