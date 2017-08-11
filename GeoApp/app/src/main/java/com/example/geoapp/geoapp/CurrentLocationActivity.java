@@ -1,7 +1,6 @@
 package com.example.geoapp.geoapp;
 
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -12,10 +11,8 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,14 +23,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.geoapp.geofence.GeofenceGeometry;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.PlaceLikelihood;
-import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -135,12 +129,12 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
                 .addApi(Places.PLACE_DETECTION_API)
                 .build();
         mGoogleApiClient.connect();
-        Intent intentGeofence = getIntent();
+        /*Intent intentGeofence = getIntent();
         if(intentGeofence != null && intentGeofence.getAction() == MenuActivity.DRAW_GEOFENCE_ACTION) {
             drawGeofence = true;
             geofenceLatLng = (LatLng) intentGeofence.getParcelableExtra(MenuActivity.LAT_LNG);
             mRadius = intentGeofence.getFloatExtra(MenuActivity.RADIUS, 30);
-        }
+        }*/
 
         mSeekBarRadius = (SeekBar) findViewById(R.id.set_radius_seek_bar);
         android.support.constraint.ConstraintLayout.LayoutParams oldLp =

@@ -1,4 +1,4 @@
-package com.example.geoapp.geoapp;
+package com.example.geoapp.geofence;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.example.geoapp.geoapp.MapsActivity;
+import com.example.geoapp.geoapp.R;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
 
@@ -42,7 +44,7 @@ public class ReceiveTransitionsIntentService extends IntentService {
         Log.d(TAG, "processGeofence: "+geofence.toString());
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext());
 
-        PendingIntent openActivityIntetnt = PendingIntent.getActivity(this, 0, new Intent(this, MenuActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent openActivityIntetnt = PendingIntent.getActivity(this, 0, new Intent(this, MapsActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
         int id = Integer.parseInt(geofence.getRequestId());
 
         String transitionTypeString = getTransitionTypeString(transitionType);

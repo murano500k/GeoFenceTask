@@ -4,15 +4,11 @@ import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
-import android.content.Intent;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.example.geoapp.geoapp.MyGeofence;
+import com.example.geoapp.geofence.GeofenceEntity;
 import com.example.geoapp.geoapp.R;
-import com.google.android.gms.location.Geofence;
-
-import java.util.HashMap;
 
 /**
  * Created by bovchynnikov on 25.07.17.
@@ -42,20 +38,20 @@ public class GeofenceTable  implements Parcelable {
     public boolean isActive = true;
 
     @Ignore
-    public MyGeofence myGeofence;
+    public GeofenceEntity myGeofence;
 
     public GeofenceTable() {
 
     }
 
     @Ignore
-    public MyGeofence getMyGeofence() {
+    public GeofenceEntity getGeofenceEntity() {
         int id = this.uid;
         double latitude = this.latitude;
         double longitude = this.longitude;
         int transitionType = this.transitionType;
         float radius = this.radius;
-        return new MyGeofence(id,  latitude, longitude, radius, transitionType);
+        return new GeofenceEntity(id,  latitude, longitude, radius, transitionType);
     }
 
     @Ignore

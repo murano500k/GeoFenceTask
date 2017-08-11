@@ -1,18 +1,14 @@
 package com.example.geoapp.geoapp;
 
 import android.app.ProgressDialog;
-import android.arch.lifecycle.LifecycleActivity;
 import android.arch.lifecycle.LifecycleRegistry;
 import android.arch.lifecycle.LifecycleRegistryOwner;
 import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.location.Location;
 import android.os.AsyncTask;
-import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -26,12 +22,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.geoapp.geostorage.GeoDatabase;
+import com.example.geoapp.geofence.GeofenceGeometry;
+import com.example.geoapp.geofence.GeofencingService;
+import com.example.geoapp.geofence.GeofenceEntity;
 import com.example.geoapp.geostorage.GeoDatabaseManager;
 import com.example.geoapp.geostorage.GeofenceDao;
 import com.example.geoapp.geostorage.GeofenceTable;
@@ -88,6 +85,9 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
     static public final String GEOFENCE_TABLE = "geofence_table";
     static public final int UPDATE_LIST = 3;
     static public final int SKIP_MAP = 4;
+    //static final String DRAW_GEOFENCE_ACTION = "draw_geofence_action";
+    //static final String LAT_LNG = "lat_lng";
+    //static final String RADIUS = "radius";
 
     private GeoDatabaseManager mGeoDatabaseManager = null;
 
@@ -206,7 +206,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
                 });
     }
 
-    private void sendGeo(MyGeofence myGeofence) {
+    private void sendGeo(GeofenceEntity myGeofence) {
         AppCompatActivity activity = this;
         Intent geofencingService = new Intent(activity, GeofencingService.class);
         geofencingService.setAction(String.valueOf(Math.random()));
@@ -531,7 +531,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             @Override
             public void onClick(View v) {
                 float radius = geoTable.get(getPosition()).radius;
-                LatLng geofenceLatLng = geoTable.get(getPosition()).getMyGeofence().getLatLng();
+                LatLng geofenceLatLng = geoTable.get(getPosition()).getGeofenceEntity().getLatLng();
                 int opaqueRed = Color.argb(125, 0, 200, 0);
                 mMap.addCircle(new CircleOptions().center(geofenceLatLng)
                         .radius(radius).fillColor(opaqueRed).strokeColor(Color.BLUE).strokeWidth(2));

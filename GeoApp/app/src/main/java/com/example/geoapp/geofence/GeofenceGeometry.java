@@ -1,10 +1,9 @@
-package com.example.geoapp.geoapp;
+package com.example.geoapp.geofence;
 
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.google.android.gms.internal.d;
 import com.google.android.gms.maps.model.LatLng;
 
 /**
@@ -17,13 +16,13 @@ public class GeofenceGeometry implements Parcelable {
     private float mRadius;
     private int mTmTransitionType;
 
-    GeofenceGeometry(Location location, float radius, int transitionType){
+    public GeofenceGeometry(Location location, float radius, int transitionType){
         mLatLng = new LatLng(location.getLatitude(), location.getLongitude());
         mRadius = radius;
         mTmTransitionType = transitionType;
     }
 
-    GeofenceGeometry(LatLng latLng, float radius, int transitionType){
+    public GeofenceGeometry(LatLng latLng, float radius, int transitionType){
         mLatLng = latLng;
         mRadius = radius;
         mTmTransitionType = transitionType;

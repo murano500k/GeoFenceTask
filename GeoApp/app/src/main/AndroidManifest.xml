@@ -54,11 +54,11 @@
         <activity android:name=".MenuActivity" />
 
         <service
-            android:name=".GeofencingService"
+            android:name="com.example.geoapp.geofence.GeofencingService"
             android:enabled="true"
             android:exported="true" />
         <service
-            android:name=".ReceiveTransitionsIntentService"
+            android:name="com.example.geoapp.geofence.ReceiveTransitionsIntentService"
             android:exported="false" />
 
         <receiver android:name=".MapsActivity$UpdateReceiver">

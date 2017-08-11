@@ -1,4 +1,4 @@
-package com.example.geoapp.geoapp;
+package com.example.geoapp.geofence;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
@@ -12,7 +12,7 @@ import static com.google.android.gms.location.Geofence.NEVER_EXPIRE;
  * Created by bovchynnikov on 19.07.17.
  */
 
-public class MyGeofence implements Serializable {
+public class GeofenceEntity implements Serializable {
     private static final int ONE_MINUTE = 60000;
 
     private int id;
@@ -22,7 +22,7 @@ public class MyGeofence implements Serializable {
     private int transitionType;
     private GeofenceTable rowGeofence;
 
-    public MyGeofence(int id, double latitude, double longitude, float radius, int transitionType) {
+    public GeofenceEntity(int id, double latitude, double longitude, float radius, int transitionType) {
         this.id = id;
         this.latitude = latitude;
         this.longitude = longitude;

@@ -1,4 +1,4 @@
-package com.example.geoapp.geoapp;
+package com.example.geoapp.geofence;
 
 import android.app.PendingIntent;
 import android.app.Service;
@@ -42,7 +42,7 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
         mAction = (Action) intent.getSerializableExtra(EXTRA_ACTION);
 
         if (mAction == Action.ADD) {
-            MyGeofence newGeofence = (MyGeofence) intent.getSerializableExtra(EXTRA_GEOFENCE);
+            GeofenceEntity newGeofence = (GeofenceEntity) intent.getSerializableExtra(EXTRA_GEOFENCE);
             transitionType = newGeofence.getTransitionType();
             mGeofenceListsToAdd.add(newGeofence.toGeofence());
         }
