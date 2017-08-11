@@ -87,6 +87,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
     static public final String GEOFENCE_GEOMETRY = "geofence_geometry";
     static public final String GEOFENCE_TABLE = "geofence_table";
     static public final int UPDATE_LIST = 3;
+    static public final int SKIP_MAP = 4;
 
     private GeoDatabaseManager mGeoDatabaseManager = null;
 
@@ -145,9 +146,10 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (data == null) {
+        if (data == null || resultCode == MapsActivity.SKIP_MAP) {
             return;
         }
+
         if (requestCode == MapsActivity.RESULT_CREATE_NEW_GEOFENCE) {
             if(resultCode == RESULT_OK){
                 GeofenceGeometry location = (GeofenceGeometry) data.getParcelableExtra(MapsActivity.GEOFENCE_GEOMETRY);

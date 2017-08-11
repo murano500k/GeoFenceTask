@@ -15,6 +15,11 @@ public class Converters {
     }
 
     @TypeConverter
+    public static Date fromTimeTable(GeofenceTimeTable gtt) {
+        return gtt == null ? null : new Date(gtt.time);
+    }
+
+    @TypeConverter
     public static Long dateToTimestamp(Date date) {
         return date == null ? null : date.getTime();
     }

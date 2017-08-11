@@ -34,6 +34,7 @@ public class GeoDatabaseManager extends AndroidViewModel{
 
     private LiveData<List<GeofenceTable>> listGeofenceTableAll;
     private LiveData<List<GeofenceTable>> listGeofenceTableOnlyActive;
+    //private LiveData<List<GeofenceTimeTable>> listGeofenceTimeTable;
 
     static public String UPDATE_UI_LIST = "update_ui_list";
 
@@ -41,8 +42,9 @@ public class GeoDatabaseManager extends AndroidViewModel{
 
     public GeoDatabaseManager(Application application) {
         super(application);
-        mDb = GeoDatabase.getInstance(application.getApplicationContext());
-        mGeofenceDao = mDb.geofenceDao();
+        if(mDb == null)
+            mDb = GeoDatabase.getInstance(application.getApplicationContext());
+            mGeofenceDao = mDb.geofenceDao();
         //testInit();
         listGeofenceTableAll = mGeofenceDao.getAllLiveData();
         listGeofenceTableOnlyActive = mGeofenceDao.getAllActiveLiveData(true);
@@ -193,10 +195,12 @@ public class GeoDatabaseManager extends AndroidViewModel{
                 mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).transitionType));
 
         GeofenceTimeTable [] arrgtt = new GeofenceTimeTable[gtt.size()];
-        mGeofenceDao.insertAll(gtt.toArray(arrgtt));
+        arrgtt = gtt.toArray(arrgtt);
+        mGeofenceDao.insertAll(arrgtt);
 
         int st = mGeofenceDao.getTimeTableByGeofenceTable(mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).uid).size();
-        Log.d("Test_tt", "st = " + st);
+        Log.d("Test_tt", "st = " + st + "        uid = " + (mListGeofenceTableOnlyActive.get(mListGeofenceTableOnlyActive.size()-1).uid)
+        + "              arrgtt = " + arrgtt.length);
     }
 
     GeofenceTable getGeofenceRowTest(double latitude, double longitude, float radius, int transitionType, String address, Boolean is_active) {

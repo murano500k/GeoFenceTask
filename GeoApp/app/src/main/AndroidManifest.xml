@@ -32,13 +32,13 @@
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".SettingsActivity"
             android:parentActivityName=".MapsActivity"
+            android:launchMode="singleTop"
             android:theme="@style/YesActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -46,7 +46,11 @@
         </activity>
         <activity
             android:name=".CurrentLocationActivity"
-            android:theme="@style/YesActionBar" />
+            android:theme="@style/YesActionBar" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MapsActivity" />
+            </activity>
         <activity android:name=".MenuActivity" />
 
         <service
@@ -63,7 +67,12 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".GeoTimeTableActivity"></activity>
+        <activity android:name=".GeoTimeTableActivity"
+            android:theme="@style/YesActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".SettingsActivity" />
+        </activity>
     </application>
 
 </manifest>
