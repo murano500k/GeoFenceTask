@@ -109,8 +109,8 @@ public class GeoDatabaseManager extends AndroidViewModel{
     }
 
 
-    public void insert(GeofenceTable param) {
-        mGeofenceDao.insertAll(param);
+    public long insert(GeofenceTable param) {
+        return mGeofenceDao.insert(param);
     }
 
     public void insertAll(GeofenceTable... param) {

@@ -62,14 +62,6 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
     private GoogleApiClient mGoogleApiClient;
 
     private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
-
-    // Used for selecting the current place.
-    private final int mMaxEntries = 5;
-    private String[] mLikelyPlaceNames = new String[mMaxEntries];
-    private String[] mLikelyPlaceAddresses = new String[mMaxEntries];
-    private String[] mLikelyPlaceAttributions = new String[mMaxEntries];
-    private LatLng[] mLikelyPlaceLatLngs = new LatLng[mMaxEntries];
-
     private ArrayList<LatLng> latLngList;
 
     private FloatingActionButton floatingActionButton;
@@ -81,6 +73,7 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
     private Circle circleDrawSeekBar = null;
     private LatLng chosenPoint = null;
     private int startRadius = 15;
+    private boolean active = true;
     private final int fillCircleColor = Color.argb(125, 0, 200, 0);
 
     private int mTransitionType = Geofence.GEOFENCE_TRANSITION_ENTER;
@@ -100,25 +93,14 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent();
-
-                //if(latLngList != null && latLngList.size() > 0) {
-                 //   LatLng temp = latLngList.get(latLngList.size() - 1);
-                 //   Location location = new Location("Test");
-                 //   location.setLatitude(temp.latitude);
-                //    location.setLongitude(temp.longitude);
-                GeofenceGeometry geofenceGeometry = new GeofenceGeometry(chosenPoint, startRadius, mTransitionType);
-                    intent.putExtra(MapsActivity.GEOFENCE_GEOMETRY, geofenceGeometry);
-                //}
-                //else
-                //    intent.putExtra("location", mLastKnownLocation);
+                GeofenceGeometry geofenceGeometry = new GeofenceGeometry(chosenPoint, startRadius, mTransitionType, active);
+                intent.putExtra(MapsActivity.GEOFENCE_GEOMETRY, geofenceGeometry);
                 setResult(RESULT_OK, intent);
                 finish();
             }
         });
 
         latLngList = new ArrayList<LatLng>();
-
-        Log.d("Test_ttt", "type = " + mTransitionType);
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this /* FragmentActivity */,
@@ -129,13 +111,6 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
                 .addApi(Places.PLACE_DETECTION_API)
                 .build();
         mGoogleApiClient.connect();
-        /*Intent intentGeofence = getIntent();
-        if(intentGeofence != null && intentGeofence.getAction() == MenuActivity.DRAW_GEOFENCE_ACTION) {
-            drawGeofence = true;
-            geofenceLatLng = (LatLng) intentGeofence.getParcelableExtra(MenuActivity.LAT_LNG);
-            mRadius = intentGeofence.getFloatExtra(MenuActivity.RADIUS, 30);
-        }*/
-
         mSeekBarRadius = (SeekBar) findViewById(R.id.set_radius_seek_bar);
         android.support.constraint.ConstraintLayout.LayoutParams oldLp =
                 (android.support.constraint.ConstraintLayout.LayoutParams) mSeekBarRadius.getLayoutParams();
@@ -179,7 +154,6 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("Test_ttt", "onResume");
         mTransitionType = Geofence.GEOFENCE_TRANSITION_ENTER;
     }
 
@@ -314,9 +288,11 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
         final CheckBox checkEnter = (CheckBox)dialog.findViewById(R.id.cb_transition_enter_dialog_options);
         final CheckBox checkExit = (CheckBox)dialog.findViewById(R.id.cb_transition_exit_dialog_options);
         final CheckBox checkDwell = (CheckBox)dialog.findViewById(R.id.cb_transition_dwell_dialog_options);
+        final CheckBox checkActive = (CheckBox)dialog.findViewById(R.id.cb_active_dialog_options);
         checkEnter.setChecked((mTransitionType & Geofence.GEOFENCE_TRANSITION_ENTER) != 0);
         checkExit.setChecked((mTransitionType & Geofence.GEOFENCE_TRANSITION_EXIT) != 0);
         checkDwell.setChecked((mTransitionType & Geofence.GEOFENCE_TRANSITION_DWELL) != 0);
+        checkActive.setChecked(true);
         Button btOk = (Button) dialog.findViewById(R.id.dialog_options_ok);
         btOk.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -336,6 +312,7 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
                     mTransitionType = mTransitionType | Geofence.GEOFENCE_TRANSITION_EXIT;
                 if(checkDwell.isChecked())
                     mTransitionType = mTransitionType | Geofence.GEOFENCE_TRANSITION_DWELL;
+                active = checkActive.isChecked();
                 dialog.dismiss();
             }
         });
@@ -412,7 +389,6 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
                     new LatLng(mLastKnownLocation.getLatitude(),
                             mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
         } else {
-            //Log.d(TAG, "Current location is null. Using defaults.");
             if(!drawGeofence)
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
             mMap.getUiSettings().setMyLocationButtonEnabled(false);
@@ -431,7 +407,6 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
 
     @Override
     public void onPoiClick(PointOfInterest poi) {
-        Log.d("Test_cl", "onPoiClick");
         Toast.makeText(getApplicationContext(), "Clicked: " +
                         poi.name + "\nPlace ID:" + poi.placeId +
                         "\nLatitude:" + poi.latLng.latitude +

@@ -24,6 +24,9 @@ public interface GeofenceDao {
     @Query("SELECT * FROM geotable WHERE uid IN (:geofenceIds)")
     public List<GeofenceTable> loadAllByIds(int[] geofenceIds);
 
+    @Query("SELECT * FROM geotable WHERE uid IN (:geofenceId)")
+    public GeofenceTable loadByIds(long geofenceId);
+
     @Query("SELECT * FROM geotable WHERE is_active IN (:active)")
     public List<GeofenceTable> getAllActive(boolean active);
 
@@ -37,7 +40,7 @@ public interface GeofenceDao {
     public void insertAll(GeofenceTable... geotables);
 
     @Insert
-    public void insert(GeofenceTable geotable);
+    public long insert(GeofenceTable geotable);
 
     @Insert
     public void insertAll(GeofenceTimeTable... geotime_tables);

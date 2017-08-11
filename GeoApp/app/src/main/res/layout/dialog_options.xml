@@ -21,6 +21,29 @@
         android:inputType="number"
         app:layout_constraintTop_toBottomOf="parent"
         app:layout_constraintLeft_toRightOf="@+id/text_radius_set_dialog_options"/>
+
+    <TextView
+        android:id="@+id/text_active_dialog_options"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/menu_active"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:paddingLeft="5dp"
+        android:textSize="25dp"
+        app:layout_constraintTop_toBottomOf="@+id/edit_text_radius_set_dialog_options"/>
+    <CheckBox android:id="@+id/cb_active_dialog_options"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintLeft_toRightOf="@+id/text_active_dialog_options"
+        app:layout_constraintTop_toBottomOf="@+id/edit_text_radius_set_dialog_options"
+        />
+
     <TextView
         android:id="@+id/text_type_transition_dialog_options"
         android:layout_width="wrap_content"
@@ -29,7 +52,7 @@
         android:layout_marginLeft="5dp"
         android:layout_marginTop="5dp"
         android:textSize="25dp"
-        app:layout_constraintTop_toBottomOf="@+id/edit_text_radius_set_dialog_options"
+        app:layout_constraintTop_toBottomOf="@+id/text_active_dialog_options"
         app:layout_constraintLeft_toRightOf="parent"
         android:layout_marginStart="5dp" />
     <TextView

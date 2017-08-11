@@ -9,6 +9,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -54,42 +57,34 @@ import java.util.concurrent.ExecutionException;
 public class MapsActivity extends AppCompatActivity implements LifecycleRegistryOwner, OnMapReadyCallback  {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
-    private GoogleMap mMap;
-    private static final int DEFAULT_ZOOM = 15;
-    FloatingActionButton addGeofenceButton;
-
-    static final String DRAW_GEOFENCE_ACTION = "draw_geofence_action";
-    static final String LAT_LNG = "lat_lng";
-    static final String RADIUS = "radius";
-
-    RecyclerView list;
-    GeoTableAdapter geoTableAdapter;
-    private final LifecycleRegistry mRegistry = new LifecycleRegistry(this);
-
     private static final String startUrl = "http://maps.googleapis.com/maps/api/geocode/json?latlng=";
     private static final String commaUrl = ",";
     private static final String endUrl = "&sensor=true";
-
-    private ProgressDialog pDialog;
-    static GeofenceDao mGeofenceDao;
-
-    private boolean showAllGeofenceInList = true;
-    private boolean needUpdate = true;
-
-    static MapsActivity instance;
-
+    static public final String GEOFENCE_GEOMETRY = "geofence_geometry";
+    static public final String GEOFENCE_TABLE = "geofence_table";
+    static public final String SEND_ID_TABLE = "send_id_table";
+    static final String DRAW_GEOFENCE_ACTION = "draw_geofence_action";
+    static final String LAT_LNG = "lat_lng";
+    static final String RADIUS = "radius";
     static public final int RESULT_SETTINGS_DELETE = 0;
     static public final int RESULT_SETTINGS_UPDATE = 1;
     static public final int RESULT_CREATE_NEW_GEOFENCE = 2;
-    static public final String GEOFENCE_GEOMETRY = "geofence_geometry";
-    static public final String GEOFENCE_TABLE = "geofence_table";
     static public final int UPDATE_LIST = 3;
     static public final int SKIP_MAP = 4;
-    //static final String DRAW_GEOFENCE_ACTION = "draw_geofence_action";
-    //static final String LAT_LNG = "lat_lng";
-    //static final String RADIUS = "radius";
+    private static final int DEFAULT_ZOOM = 15;
+    private static final int SEND_GEOFENCE = 5;
 
+    private GoogleMap mMap;
+    private FloatingActionButton addGeofenceButton;
+    private RecyclerView list;
+    private GeoTableAdapter geoTableAdapter;
+    private final LifecycleRegistry mRegistry = new LifecycleRegistry(this);
+    private ProgressDialog pDialog;
+    private boolean showAllGeofenceInList = true;
+    private boolean needUpdate = true;
+    static MapsActivity instance;
     private GeoDatabaseManager mGeoDatabaseManager = null;
+    private Handler hanhlerSendGeofence;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,8 +96,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-
-        mGeoDatabaseManager = GeoDatabaseManager.getInstanse(this);//ViewModelProviders.of(this).get(GeoDatabaseManager.class);
+        mGeoDatabaseManager = GeoDatabaseManager.getInstanse(this);
         Thread threadInitDB = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -110,6 +104,17 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             }
         });
         threadInitDB.start();
+
+        hanhlerSendGeofence = new Handler(Looper.myLooper()){
+            @Override
+            public void handleMessage(Message msg) {
+                if(msg.what == MapsActivity.SEND_GEOFENCE) {
+                    Long id = (Long)msg.obj;
+                    new SendGeofence().execute(id);
+                }
+                super.handleMessage(msg);
+            }
+        };
 
         list = (RecyclerView) findViewById(R.id.recycler_view_geotable);
         list.setLayoutManager(new LinearLayoutManager(this));
@@ -158,12 +163,18 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
                     final float radius = location.getmRadius();
                     final String urlJson = getUrl(latLng);
                     final int ttype =  location.getmTmTransitionType();
+                    final boolean active = location.ismActive();
+                    Log.d("Test_snd", "active = " + active);
                       Thread th = new Thread(new Runnable() {
                         @Override
                         public void run() {
                             String address = getAddressTest(urlJson);
-                            mGeoDatabaseManager.insert(getGeofenceRow(latLng.latitude, latLng.longitude, radius,
-                                    ttype, address));
+                            long id = mGeoDatabaseManager.insert(getGeofenceRow(latLng.latitude, latLng.longitude, radius,
+                                    ttype, address, active));
+                            if(active) {
+                                Message msg = hanhlerSendGeofence.obtainMessage(MapsActivity.SEND_GEOFENCE, id);
+                                hanhlerSendGeofence.sendMessage(msg);
+                            }
                         }
                     });
                     th.start();
@@ -204,16 +215,6 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
                         geoTableAdapter.addItems(geofenceTables);
                     }
                 });
-    }
-
-    private void sendGeo(GeofenceEntity myGeofence) {
-        AppCompatActivity activity = this;
-        Intent geofencingService = new Intent(activity, GeofencingService.class);
-        geofencingService.setAction(String.valueOf(Math.random()));
-        geofencingService.putExtra(GeofencingService.EXTRA_ACTION, GeofencingService.Action.ADD);
-        geofencingService.putExtra(GeofencingService.EXTRA_GEOFENCE, myGeofence);
-
-        activity.startService(geofencingService);
     }
 
     @Override
@@ -262,11 +263,11 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
                         //for (int i = 0; i < contacts.length(); i++) {
                         JSONObject c = contacts.getJSONObject(0);
                         String address = c.getString("formatted_address");
-                        geofenceTable = mGeofenceDao.findByAddress(url);
+                        geofenceTable = mGeoDatabaseManager.getDao().findByAddress(url);
 
                         if (geofenceTable != null) {
                             geofenceTable.address = address;
-                            mGeofenceDao.updateGeofenceRow(geofenceTable);
+                            mGeoDatabaseManager.getDao().updateGeofenceRow(geofenceTable);
                          }
 
                     } catch (final JSONException e) {
@@ -310,68 +311,60 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         }
     }
 
-    String getAddressTest(String... urls) {
+    String getAddressTest(String url) {
+        if(!GeoUtils.isNetworkConnected(this))
+            return url;
+
         HttpHandler sh = new HttpHandler();
         String address = null;
-        // Making a request to url and getting response
-        Integer urlsCount = urls.length;
-        GeofenceTable geofenceTable = null;
-        for (String url : urls) {
-            String jsonStr = sh.makeServiceCall(url);
+        String jsonStr = sh.makeServiceCall(url);
+        Log.e(TAG, "Response from url: " + jsonStr);
 
-            Log.e(TAG, "Response from url: " + jsonStr);
+        if (jsonStr != null) {
+            try {
+                JSONObject jsonObj = new JSONObject(jsonStr);
+                // Getting JSON Array node
+                JSONArray contacts = jsonObj.getJSONArray("results");
+                // looping through All Contacts
+                //for (int i = 0; i < contacts.length(); i++) {
+                JSONObject c = contacts.getJSONObject(0);
+                address = c.getString("formatted_address");
 
-            if (jsonStr != null) {
-                try {
-                    JSONObject jsonObj = new JSONObject(jsonStr);
-
-                    // Getting JSON Array node
-                    JSONArray contacts = jsonObj.getJSONArray("results");
-
-                    // looping through All Contacts
-                    //for (int i = 0; i < contacts.length(); i++) {
-                    JSONObject c = contacts.getJSONObject(0);
-                    address = c.getString("formatted_address");
-
-                } catch (final JSONException e) {
-                    Log.e(TAG, "Json parsing error: " + e.getMessage());
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getApplicationContext(),
-                                    "Json parsing error: " + e.getMessage(),
-                                    Toast.LENGTH_LONG)
-                                    .show();
-                        }
-                    });
-                }
-            } else {
-                Log.e(TAG, "Couldn't get json from server.");
+            } catch (final JSONException e) {
+                Log.e(TAG, "Json parsing error: " + e.getMessage());
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         Toast.makeText(getApplicationContext(),
-                                "Couldn't get json from server. Check LogCat for possible errors!",
+                                "Json parsing error: " + e.getMessage(),
                                 Toast.LENGTH_LONG)
                                 .show();
                     }
                 });
             }
+        } else {
+            Log.e(TAG, "Couldn't get json from server.");
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getApplicationContext(),
+                            "Couldn't get json from server. Check LogCat for possible errors!",
+                            Toast.LENGTH_LONG)
+                            .show();
+                }
+            });
         }
-
-//            if(geofenceTable != null && geofenceTable.isActive)
-//                sendGeo(geofenceTable.getMyGeofence());
-
         return address;
     }
 
-    GeofenceTable getGeofenceRow(double latitude, double longitude, float radius, int transitionType, String address) {
+    GeofenceTable getGeofenceRow(double latitude, double longitude, float radius, int transitionType, String address, boolean active) {
         GeofenceTable geofenceRow = new GeofenceTable();
         geofenceRow.latitude = latitude;
         geofenceRow.longitude = longitude;
         geofenceRow.radius = radius;
         geofenceRow.transitionType = transitionType;
         geofenceRow.address = address;// != null ? address : getAddress(new LatLng(latitude, longitude));
+        geofenceRow.isActive = active;
         return geofenceRow;
     }
 
@@ -458,7 +451,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
 
     void updateAddresses() {
         ArrayList<GeofenceTable> table = new ArrayList<GeofenceTable>();
-        table.addAll(mGeofenceDao.findByUrlsInAddresses(startUrl+'%'));
+        table.addAll(mGeoDatabaseManager.getDao().findByUrlsInAddresses(startUrl+'%'));
         String[] str = new String[table.size()];
         int i = 0;
         for(GeofenceTable gt : table) {
@@ -550,4 +543,22 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
 
     }
 
+    private class SendGeofence extends AsyncTask<Long, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Long... params) {
+            GeofenceTable gt = mGeoDatabaseManager.getDao().loadByIds(params[0]);
+            sendGeo(gt.getGeofenceEntity());
+            return null;
+        }
+    }
+
+    private void sendGeo(GeofenceEntity myGeofence) {
+        AppCompatActivity activity = this;
+        Intent geofencingService = new Intent(activity, GeofencingService.class);
+        geofencingService.setAction(String.valueOf(Math.random()));
+        geofencingService.putExtra(GeofencingService.EXTRA_ACTION, GeofencingService.Action.ADD);
+        geofencingService.putExtra(GeofencingService.EXTRA_GEOFENCE, myGeofence);
+        activity.startService(geofencingService);
+    }
 }
