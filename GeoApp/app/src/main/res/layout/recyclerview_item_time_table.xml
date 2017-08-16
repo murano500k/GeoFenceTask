@@ -22,7 +22,8 @@
             android:layout_height="wrap_content"
             android:text="Test CardView"
             android:layout_centerInParent="true"
-            android:textSize="18sp"
+            android:textSize="15sp"
+            android:layout_margin="5dp"
             android:textColor="#000"/>
   <!--      <TextView
             android:id="@+id/info_text_time_exit"

@@ -50,4 +50,8 @@ public class GeofenceEntity implements Serializable {
     public int getTransitionType() {
         return transitionType;
     }
+
+    public String getId() {
+        return String.valueOf(id);
+    }
 }

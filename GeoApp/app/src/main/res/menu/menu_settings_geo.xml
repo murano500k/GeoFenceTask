@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/item_time_table"
-        android:icon="@drawable/watch"
+        android:icon="@drawable/ic_watch_white_24dp"
         app:showAsAction="always"
         android:title="Time table">
     </item>
     <item
         android:id="@+id/item_delete"
-        android:icon="@android:drawable/ic_menu_delete"
+        android:icon="@drawable/ic_delete_white_24dp"
         app:showAsAction="always"
         android:title="Delete">
     </item>

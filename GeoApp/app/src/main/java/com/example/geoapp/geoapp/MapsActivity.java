@@ -1,5 +1,6 @@
 package com.example.geoapp.geoapp;
 
+import android.app.ActivityOptions;
 import android.app.ProgressDialog;
 import android.arch.lifecycle.LifecycleRegistry;
 import android.arch.lifecycle.LifecycleRegistryOwner;
@@ -33,7 +34,6 @@ import com.example.geoapp.geofence.GeofenceGeometry;
 import com.example.geoapp.geofence.GeofencingService;
 import com.example.geoapp.geofence.GeofenceEntity;
 import com.example.geoapp.geostorage.GeoDatabaseManager;
-import com.example.geoapp.geostorage.GeofenceDao;
 import com.example.geoapp.geostorage.GeofenceTable;
 import com.example.geoapp.geostorage.GeofenceTimeTable;
 import com.example.geoapp.utils.GeoUtils;
@@ -62,17 +62,14 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
     private static final String endUrl = "&sensor=true";
     static public final String GEOFENCE_GEOMETRY = "geofence_geometry";
     static public final String GEOFENCE_TABLE = "geofence_table";
-    static public final String SEND_ID_TABLE = "send_id_table";
-    static final String DRAW_GEOFENCE_ACTION = "draw_geofence_action";
-    static final String LAT_LNG = "lat_lng";
-    static final String RADIUS = "radius";
     static public final int RESULT_SETTINGS_DELETE = 0;
     static public final int RESULT_SETTINGS_UPDATE = 1;
     static public final int RESULT_CREATE_NEW_GEOFENCE = 2;
     static public final int UPDATE_LIST = 3;
     static public final int SKIP_MAP = 4;
     private static final int DEFAULT_ZOOM = 15;
-    private static final int SEND_GEOFENCE = 5;
+    private static final int SEND_GEOFENCE_ADD = 5;
+    private static final int SEND_GEOFENCE_REMOVE = 6;
 
     private GoogleMap mMap;
     private FloatingActionButton addGeofenceButton;
@@ -97,10 +94,13 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         mapFragment.getMapAsync(this);
 
         mGeoDatabaseManager = GeoDatabaseManager.getInstanse(this);
+
+        //TODO: test_init
         Thread threadInitDB = new Thread(new Runnable() {
             @Override
             public void run() {
-                mGeoDatabaseManager.testInit();
+                //mGeoDatabaseManager.testInit();
+                //mGeoDatabaseManager.cleanDB();
             }
         });
         threadInitDB.start();
@@ -108,9 +108,18 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         hanhlerSendGeofence = new Handler(Looper.myLooper()){
             @Override
             public void handleMessage(Message msg) {
-                if(msg.what == MapsActivity.SEND_GEOFENCE) {
+                if(msg.what == MapsActivity.SEND_GEOFENCE_ADD) {
                     Long id = (Long)msg.obj;
-                    new SendGeofence().execute(id);
+                    Long []param = new Long[2];
+                    param[0] = id;
+                    param[1] = 0l;
+                    new SendGeofence().execute(param);
+                } else if(msg.what == MapsActivity.SEND_GEOFENCE_REMOVE) {
+                    Long id = (Long)msg.obj;
+                    Long []param = new Long[2];
+                    param[0] = id;
+                    param[1] = 1l;
+                    new SendGeofence().execute(param);
                 }
                 super.handleMessage(msg);
             }
@@ -127,10 +136,23 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MapsActivity.this, CurrentLocationActivity.class);
-                startActivityForResult(intent, MapsActivity.RESULT_CREATE_NEW_GEOFENCE);
+                
+                ActivityOptions ao = ActivityOptions.makeCustomAnimation(MapsActivity.this, R.anim.fadein, R.anim.fadeout);
+                //startActivityForResult(intent, MapsActivity.RESULT_SETTINGS_UPDATE, ao.toBundle());
+                overridePendingTransition(R.anim.fadein, R.anim.fadeout);
+                startActivityForResult(intent, MapsActivity.RESULT_CREATE_NEW_GEOFENCE, ao.toBundle());
+
             }
         });
 
+        Intent geofencingService = new Intent(this, GeofencingService.class);
+        geofencingService.putExtra(GeofencingService.EXTRA_ACTION, GeofencingService.Action.START_INIT);
+        this.startService(geofencingService);
+    }
+
+    @Override
+    public void overridePendingTransition(int enterAnim, int exitAnim) {
+        super.overridePendingTransition(enterAnim, exitAnim);
     }
 
     private String getUrl(LatLng latLng) {
@@ -164,15 +186,14 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
                     final String urlJson = getUrl(latLng);
                     final int ttype =  location.getmTmTransitionType();
                     final boolean active = location.ismActive();
-                    Log.d("Test_snd", "active = " + active);
-                      Thread th = new Thread(new Runnable() {
+                    Thread th = new Thread(new Runnable() {
                         @Override
                         public void run() {
                             String address = getAddressTest(urlJson);
                             long id = mGeoDatabaseManager.insert(getGeofenceRow(latLng.latitude, latLng.longitude, radius,
                                     ttype, address, active));
                             if(active) {
-                                Message msg = hanhlerSendGeofence.obtainMessage(MapsActivity.SEND_GEOFENCE, id);
+                                Message msg = hanhlerSendGeofence.obtainMessage(MapsActivity.SEND_GEOFENCE_ADD, id);
                                 hanhlerSendGeofence.sendMessage(msg);
                             }
                         }
@@ -182,7 +203,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             }
         } else if(requestCode == MapsActivity.RESULT_SETTINGS_UPDATE) {
             if(resultCode == MapsActivity.RESULT_SETTINGS_DELETE) {
-                final GeofenceTable gt = (GeofenceTable)data.getParcelableExtra(MapsActivity.GEOFENCE_TABLE);
+                final GeofenceTable gt = data.getParcelableExtra(MapsActivity.GEOFENCE_TABLE);
                 Thread th = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -191,7 +212,13 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
                 });
                 th.start();
             } else if(resultCode == MapsActivity.RESULT_SETTINGS_UPDATE) {
-                final GeofenceTable gt = (GeofenceTable)data.getParcelableExtra(MapsActivity.GEOFENCE_TABLE);
+                final GeofenceTable gt = data.getParcelableExtra(MapsActivity.GEOFENCE_TABLE);
+                final boolean changeActive = data.getBooleanExtra(SettingsActivity.CHANGE_ACTIVE, false);
+                if(changeActive) {
+                    int action = gt.isActive ? MapsActivity.SEND_GEOFENCE_ADD : MapsActivity.SEND_GEOFENCE_REMOVE;
+                    Message msg = hanhlerSendGeofence.obtainMessage(action, new Long(gt.uid));
+                    hanhlerSendGeofence.sendMessage(msg);
+                }
                 mGeoDatabaseManager.updateGeoTable(gt);
             }
         }
@@ -233,7 +260,6 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         protected void onPreExecute() {
             super.onPreExecute();
             // Showing progress dialog
-            Log.d("Test_ltd", "onPreExecute");
             pDialog = new ProgressDialog(MapsActivity.this);
             pDialog.setMessage("Please wait...");
             pDialog.setCancelable(false);
@@ -249,9 +275,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             GeofenceTable geofenceTable = null;
             for (String url : urls) {
                 String jsonStr = sh.makeServiceCall(url);
-
-                Log.e(TAG, "Response from url: " + jsonStr);
-
+                //Log.e(TAG, "Response from url: " + jsonStr);
                 if (jsonStr != null) {
                     try {
                         JSONObject jsonObj = new JSONObject(jsonStr);
@@ -536,11 +560,13 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             public boolean onLongClick(View v) {
                 Intent intent = new Intent(MapsActivity.this, SettingsActivity.class);
                 intent.putExtra(MapsActivity.GEOFENCE_TABLE, (geoTable.get(getPosition())));
-                startActivityForResult(intent, MapsActivity.RESULT_SETTINGS_UPDATE);
+
+                //MapsActivity.this.overridePendingTransition(R.anim.fadeout, R.anim.fadein);
+                ActivityOptions ao = ActivityOptions.makeCustomAnimation(MapsActivity.this, R.anim.fadein,  R.anim.fadeout);
+                startActivityForResult(intent, MapsActivity.RESULT_SETTINGS_UPDATE, ao.toBundle());
                 return false;
             }
         }
-
     }
 
     private class SendGeofence extends AsyncTask<Long, Void, Void> {
@@ -548,16 +574,17 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         @Override
         protected Void doInBackground(Long... params) {
             GeofenceTable gt = mGeoDatabaseManager.getDao().loadByIds(params[0]);
-            sendGeo(gt.getGeofenceEntity());
+            GeofencingService.Action action = params[1] == 0 ? GeofencingService.Action.ADD : GeofencingService.Action.REMOVE;
+            sendGeo(gt.getGeofenceEntity(), action);
             return null;
         }
     }
 
-    private void sendGeo(GeofenceEntity myGeofence) {
+    private void sendGeo(GeofenceEntity myGeofence, GeofencingService.Action action) {
         AppCompatActivity activity = this;
         Intent geofencingService = new Intent(activity, GeofencingService.class);
-        geofencingService.setAction(String.valueOf(Math.random()));
-        geofencingService.putExtra(GeofencingService.EXTRA_ACTION, GeofencingService.Action.ADD);
+        //geofencingService.setAction(String.valueOf(Math.random()));
+        geofencingService.putExtra(GeofencingService.EXTRA_ACTION, action);
         geofencingService.putExtra(GeofencingService.EXTRA_GEOFENCE, myGeofence);
         activity.startService(geofencingService);
     }

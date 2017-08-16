@@ -17,6 +17,7 @@ import com.google.android.gms.wearable.Asset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by bovchynnikov on 07.08.17.
@@ -24,6 +25,7 @@ import java.util.List;
 
 public class GeoDatabaseManager extends AndroidViewModel{
     static private final Object mutex = new Object();
+    private static final String TAG = "GeoDatabaseManager";
 
     private static GeoDatabase mDb;
     private GeofenceDao mGeofenceDao;
@@ -108,6 +110,26 @@ public class GeoDatabaseManager extends AndroidViewModel{
         }
     }
 
+    public List<GeofenceTable> getAllActiveGeofenceRow() {
+        List<GeofenceTable> gtList = null;
+        try {
+            gtList = (new GetOnlyActiveGeoRow()).execute().get();
+        } catch (ExecutionException ee) {
+            Log.d(TAG, "getAllActiveGeofenceTable: " + ee.getStackTrace());
+        } catch (InterruptedException ie) {
+            Log.d(TAG, "getAllActiveGeofenceTable: " + ie.getStackTrace());
+        }
+        return gtList;
+    }
+
+    private class GetOnlyActiveGeoRow extends AsyncTask<Void, Void, List<GeofenceTable>>{
+
+        @Override
+        protected List<GeofenceTable> doInBackground(Void... params) {
+            return getDao().getAllActive(true);
+        }
+    }
+
 
     public long insert(GeofenceTable param) {
         return mGeofenceDao.insert(param);
@@ -147,7 +169,19 @@ public class GeoDatabaseManager extends AndroidViewModel{
         mDb = null;
     }
 
-    /////////////////////////////////////////////////init_test
+    public void cleanDB() {
+        GeofenceTable[] tempGeofenceTable = new GeofenceTable[mGeofenceDao.getAll().size()];
+        tempGeofenceTable = mGeofenceDao.getAll().toArray(tempGeofenceTable);
+        for(GeofenceTable tempGt : tempGeofenceTable) {
+            GeofenceTimeTable[] gttTemp = new GeofenceTimeTable[mGeofenceDao.getTimeTableByGeofenceTable(tempGt.uid).size()];
+            gttTemp =  mGeofenceDao.getTimeTableByGeofenceTable(tempGt.uid).toArray(gttTemp);
+            mGeofenceDao.deleteAll(gttTemp);
+        }
+        mGeofenceDao.deleteAll(tempGeofenceTable);
+    }
+
+    /// TODO: only for testing
+    /// init_test start
     public ArrayList<GeofenceTable> mListGeofenceTableAll;
     public ArrayList<GeofenceTable> mListGeofenceTableOnlyActive;
     {
@@ -222,5 +256,5 @@ public class GeoDatabaseManager extends AndroidViewModel{
     public synchronized List<GeofenceTable> getAll_OnlyForTest(boolean param) {
         return param ? mGeofenceDao.getAll() : mGeofenceDao.getAllActive(true);
     }
-
+    /// TODO: init_test end
 }

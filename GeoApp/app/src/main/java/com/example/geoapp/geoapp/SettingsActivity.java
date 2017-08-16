@@ -26,12 +26,15 @@ public class SettingsActivity extends AppCompatActivity {
 
     private static GeofenceTable gt = null;
     public static final String GET_ID_FROM_INTENT = "time_id";
+    public static final String CHANGE_ACTIVE = "change_active";
+    private boolean active = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
         gt = (GeofenceTable)intent.getParcelableExtra(MapsActivity.GEOFENCE_TABLE);
+        active = gt.isActive;
         Log.d("Test_ttset", "setact uid = " + gt.uid);
         getFragmentManager().beginTransaction().replace(android.R.id.content, new SettingsFragment()).commit();
     }
@@ -64,6 +67,10 @@ public class SettingsActivity extends AppCompatActivity {
             Intent intent = new Intent();
             intent.putExtra(MapsActivity.GEOFENCE_TABLE, gt);
             intent.setExtrasClassLoader(GeofenceTable.class.getClassLoader());
+            if(active == gt.isActive)
+                intent.putExtra(CHANGE_ACTIVE, false);
+            else
+                intent.putExtra(CHANGE_ACTIVE, true);
             setResult(MapsActivity.RESULT_SETTINGS_UPDATE, intent);
             finish();
         } else if(item.getItemId() == R.id.item_time_table) {

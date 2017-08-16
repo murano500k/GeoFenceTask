@@ -9,9 +9,12 @@ import android.util.Log;
 
 import com.example.geoapp.geoapp.MapsActivity;
 import com.example.geoapp.geoapp.R;
+import com.example.geoapp.geostorage.GeoDatabaseManager;
+import com.example.geoapp.geostorage.GeofenceTimeTable;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
 
+import java.util.Date;
 import java.util.List;
 
 public class ReceiveTransitionsIntentService extends IntentService {
@@ -58,6 +61,10 @@ public class ReceiveTransitionsIntentService extends IntentService {
 
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         nm.notify(transitionType * 100 + id, notificationBuilder.build());
+
+        //// TODO: add to DB
+        GeofenceTimeTable geofenceTimeTable = new GeofenceTimeTable(id, (new Date()).getTime(), transitionType);
+       (new GeoDatabaseManager(getApplication())).getDao().insertAll(geofenceTimeTable);
 
         Log.d("GEO", String.format("notification built:%d %s", id, transitionTypeString));
     }

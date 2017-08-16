@@ -18,6 +18,8 @@ import android.widget.TextView;
 import com.example.geoapp.geostorage.GeoDatabaseManager;
 import com.example.geoapp.geostorage.GeofenceTable;
 import com.example.geoapp.geostorage.GeofenceTimeTable;
+import com.google.android.gms.location.Geofence;
+
 import java.util.Date;
 
 
@@ -103,7 +105,22 @@ public class GeoTimeTableActivity extends AppCompatActivity /*implements Lifecyc
         public void onBindViewHolder(ItemViewHolder viewHolder, int i) {
             GeofenceTimeTable record = timeTable.get(i);
             //viewHolder.name.setText(record.getName());
-            viewHolder.time_enter.setText("Time Enter: " + new Date(record.time).toString());
+            String type = getTransitionTypeString(record.type);
+
+            viewHolder.time_enter.setText("Time " + type + ": " + new Date(record.time).toString());
+        }
+
+        private String getTransitionTypeString(int transitionType) {
+            switch (transitionType) {
+                case Geofence.GEOFENCE_TRANSITION_ENTER:
+                    return "enter";
+                case Geofence.GEOFENCE_TRANSITION_EXIT:
+                    return "exit";
+                case Geofence.GEOFENCE_TRANSITION_DWELL:
+                    return "dwell";
+                default:
+                    return "unknown";
+            }
         }
 
         @Override

@@ -2,7 +2,10 @@ package com.example.geoapp.geofence;
 
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -11,6 +14,9 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.geoapp.geoapp.MapsActivity;
+import com.example.geoapp.geostorage.GeoDatabaseManager;
+import com.example.geoapp.geostorage.GeofenceTable;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
@@ -29,8 +35,12 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
     public static final String EXTRA_REQUEST_IDS = "requestId";
     public static final String EXTRA_GEOFENCE = "geofence";
     public static final String EXTRA_ACTION = "action";
+    public static final String EXTRA_ACTION_ADD = "action_add";
+    public static final String EXTRA_ACTION_REMOVE = "action_remove";
 
     private List<Geofence> mGeofenceListsToAdd = new ArrayList<>();
+    private List<GeofenceTable> mGeofenceRows = new ArrayList<>();
+    private List<String> mGeofenceListIds = new ArrayList<>();
     private GoogleApiClient mGoogleApiClient;
     private Action mAction;
     private int transitionType;
@@ -38,26 +48,35 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("GEO", "Location service started");
-
+        Log.d("Test_hm", "onStartCommand ");
         mAction = (Action) intent.getSerializableExtra(EXTRA_ACTION);
 
-        if (mAction == Action.ADD) {
+        if (mAction == Action.ADD || mAction == mAction.REMOVE) {
             GeofenceEntity newGeofence = (GeofenceEntity) intent.getSerializableExtra(EXTRA_GEOFENCE);
+            mGeofenceListIds.add(newGeofence.getId());
+            mGeofenceListsToAdd.add(newGeofence.toGeofence())  ;
             transitionType = newGeofence.getTransitionType();
-            mGeofenceListsToAdd.add(newGeofence.toGeofence());
+            initGoogleApiClient();
         }
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this).addApi(LocationServices.API)
-                .addConnectionCallbacks(this).addOnConnectionFailedListener(this).build();
-        mGoogleApiClient.connect();
-
+        if (mAction == Action.START_INIT) {
+            mGeofenceRows.addAll((new GeoDatabaseManager(getApplication()).getAllActiveGeofenceRow()));
+            if (mGeofenceRows.size() > 0) {
+                for (GeofenceTable gt : mGeofenceRows) {
+                    mGeofenceListsToAdd.add(gt.getGeofenceEntity().toGeofence());
+                }
+                initGoogleApiClient();
+            } else {
+                stopSelf();
+            }
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public void onConnected(Bundle bundle) {
         Log.d("GEO", "Location client connected");
-        if (mAction == Action.ADD) {
+        if (mAction == Action.ADD || mAction == Action.START_INIT) {
             GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
             Log.d("GEO", "Location client adds geofence");
             builder.setInitialTrigger(
@@ -85,7 +104,23 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
                             }
                         });
             }
-
+        } else if(mAction == Action.REMOVE) {
+            if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                    android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                LocationServices.GeofencingApi.removeGeofences(mGoogleApiClient, mGeofenceListIds).setResultCallback(new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(@NonNull Status status) {
+                        if (status.isSuccess()) {
+                            String msg = "Geofences remove: " + status.getStatusMessage();
+                            Log.e("GEO", msg);
+                            Toast.makeText(GeofencingService.this, msg, Toast.LENGTH_SHORT)
+                                    .show();
+                        }
+                        GeofencingService.this.onResult(status);
+                    }
+                });
+            }
         }
     }
 
@@ -116,6 +151,12 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
         super.onDestroy();
     }
 
+    private void initGoogleApiClient () {
+        mGoogleApiClient = new GoogleApiClient.Builder(this).addApi(LocationServices.API)
+                .addConnectionCallbacks(this).addOnConnectionFailedListener(this).build();
+        mGoogleApiClient.connect();
+    }
+
     public void onResult(@NonNull Status status) {
         Log.d("GEO", "Geofences onResult" + status.toString());
         if (status.isSuccess()) {
@@ -126,9 +167,8 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
             Log.e("GEO", text);
             Toast.makeText(GeofencingService.this, text, Toast.LENGTH_SHORT).show();
         }
-
     }
 
-    public enum Action implements Serializable {ADD, REMOVE}
+    public enum Action implements Serializable {ADD, REMOVE, START_INIT}
 
 }
