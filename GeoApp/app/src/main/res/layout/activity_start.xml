@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.geoapp.geoapp.StartActivity">
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        android:background="@drawable/wall_test_1">
+        <!--android:background="@android:color/black"-->
+        <!--android:background="#3b5998"-->
+        <TextView
+            android:id="@+id/on_lin_ab_ls"
+            android:layout_centerHorizontal="true"
+            android:layout_above="@+id/on_air_ls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:shadowColor="#FC3A04"
+            android:shadowDx="1"
+            android:shadowDy="-1"
+            android:shadowRadius="5"
+            android:text="___________"
+            android:textColor="#FE0001"
+            android:textSize="80dp"
+            android:textStyle="bold"
+            />
+
+        <TextView
+            android:id="@+id/on_air_ls"
+            android:layout_centerHorizontal="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:shadowColor="#FC3A04"
+            android:shadowDx="-2"
+            android:shadowDy="-2"
+            android:shadowRadius="6"
+            android:text="GEO APP"
+            android:textColor="#FE0001"
+            android:textSize="80dp"
+            android:textStyle="bold"
+            />
+
+        <TextView
+            android:id="@+id/on_lin_bl_ls"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/on_air_ls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:shadowColor="#FC3A04"
+            android:shadowDx="1"
+            android:shadowDy="-1"
+            android:shadowRadius="5"
+            android:text="______________"
+            android:textColor="#FE0001"
+            android:textSize="80dp"
+            android:textStyle="bold"
+            />
+
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/circ_btn"
+            android:textColor="@android:color/white"
+            android:width="160dp"
+            android:height="160dp"
+            android:textSize="30sp"
+            android:text="START">
+        </Button>
+
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>

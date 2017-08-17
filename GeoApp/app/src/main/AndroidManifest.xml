@@ -26,19 +26,28 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBUmIXSe0O7VI0CholdYahaubdeUmPpjGI" />
 
-        <activity
-            android:name=".MapsActivity"
-            android:theme="@style/YesActionBar"
-            android:launchMode="singleTop">
+        <activity android:name=".StartActivity"
+            android:excludeFromRecents="true"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTask"
+            android:noHistory="true"
+            android:theme="@style/NoActionBarAndTitle">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".MapsActivity"
+            android:launchMode="singleTop"
+            android:theme="@style/YesActionBar">
+
+        </activity>
         <activity
             android:name=".SettingsActivity"
-            android:parentActivityName=".MapsActivity"
             android:launchMode="singleTop"
+            android:parentActivityName=".MapsActivity"
             android:theme="@style/YesActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -46,11 +55,11 @@
         </activity>
         <activity
             android:name=".CurrentLocationActivity"
-            android:theme="@style/YesActionBar" >
+            android:theme="@style/YesActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MapsActivity" />
-            </activity>
+        </activity>
 
         <service
             android:name="com.example.geoapp.geofence.GeofencingService"
@@ -66,12 +75,14 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".GeoTimeTableActivity"
+        <activity
+            android:name=".GeoTimeTableActivity"
             android:theme="@style/YesActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".SettingsActivity" />
         </activity>
+
     </application>
 
 </manifest>
