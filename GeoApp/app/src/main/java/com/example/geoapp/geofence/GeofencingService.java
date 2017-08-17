@@ -42,17 +42,17 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
     private List<GeofenceTable> mGeofenceRows = new ArrayList<>();
     private List<String> mGeofenceListIds = new ArrayList<>();
     private GoogleApiClient mGoogleApiClient;
+    private int mTransitionType = 0;
     private Action mAction;
     private int transitionType;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("GEO", "Location service started");
-        Log.d("Test_hm", "onStartCommand ");
         mAction = (Action) intent.getSerializableExtra(EXTRA_ACTION);
 
         if (mAction == Action.ADD || mAction == mAction.REMOVE) {
             GeofenceEntity newGeofence = (GeofenceEntity) intent.getSerializableExtra(EXTRA_GEOFENCE);
+            mTransitionType = newGeofence.getTransitionType();
             mGeofenceListIds.add(newGeofence.getId());
             mGeofenceListsToAdd.add(newGeofence.toGeofence())  ;
             transitionType = newGeofence.getTransitionType();
@@ -79,9 +79,9 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
         if (mAction == Action.ADD || mAction == Action.START_INIT) {
             GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
             Log.d("GEO", "Location client adds geofence");
-            builder.setInitialTrigger(
-                    transitionType == Geofence.GEOFENCE_TRANSITION_ENTER ? GeofencingRequest
-                            .INITIAL_TRIGGER_ENTER : GeofencingRequest.INITIAL_TRIGGER_EXIT);
+            builder.setInitialTrigger(mTransitionType
+                    /*transitionType == Geofence.GEOFENCE_TRANSITION_ENTER ? GeofencingRequest
+                            .INITIAL_TRIGGER_ENTER : GeofencingRequest.INITIAL_TRIGGER_EXIT*/);
             builder.addGeofences(mGeofenceListsToAdd);
             GeofencingRequest build = builder.build();
 

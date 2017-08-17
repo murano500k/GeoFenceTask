@@ -20,7 +20,6 @@ public class GeofenceEntity implements Serializable {
     private double longitude;
     private float radius;
     private int transitionType;
-    private GeofenceTable rowGeofence;
 
     public GeofenceEntity(int id, double latitude, double longitude, float radius, int transitionType) {
         this.id = id;
@@ -31,12 +30,16 @@ public class GeofenceEntity implements Serializable {
     }
 
     public Geofence toGeofence() {
-        return new Geofence.Builder()
-                .setRequestId(String.valueOf(id))
+        Geofence.Builder builder = new Geofence.Builder();
+        builder.setRequestId(String.valueOf(id))
                 .setTransitionTypes(transitionType)
                 .setCircularRegion(latitude, longitude, radius)
-                .setExpirationDuration(NEVER_EXPIRE)
-                .build();
+                .setExpirationDuration(NEVER_EXPIRE);
+
+        if((transitionType & Geofence.GEOFENCE_TRANSITION_DWELL) != 0)
+            builder.setLoiteringDelay(1000000);
+
+        return builder.build();
     }
 
     public LatLng getLatLng() {

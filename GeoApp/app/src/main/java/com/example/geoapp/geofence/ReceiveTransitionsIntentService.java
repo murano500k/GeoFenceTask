@@ -3,7 +3,10 @@ package com.example.geoapp.geofence;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -17,9 +20,16 @@ import com.google.android.gms.location.GeofencingEvent;
 import java.util.Date;
 import java.util.List;
 
+import static android.content.Context.MODE_PRIVATE;
+import static com.example.geoapp.geoapp.SettingsActivity.APP_PREFERENCES;
+import static com.example.geoapp.geoapp.SettingsActivity.SP_NOTIF;
+import static com.example.geoapp.geoapp.SettingsActivity.SP_NOTIF_HIDE;
+
 public class ReceiveTransitionsIntentService extends IntentService {
     private static final String TAG = "ReceiveTransitionsInten";
     public static final String TRANSITION_INTENT_SERVICE = "TransitionsService";
+    private boolean notifi = true;
+    private boolean notifi_hide = false;
 
     public ReceiveTransitionsIntentService() {
         super(TRANSITION_INTENT_SERVICE);
@@ -50,17 +60,24 @@ public class ReceiveTransitionsIntentService extends IntentService {
         PendingIntent openActivityIntetnt = PendingIntent.getActivity(this, 0, new Intent(this, MapsActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
         int id = Integer.parseInt(geofence.getRequestId());
 
+        SharedPreferences preferences = ReceiveTransitionsIntentService.this.getApplication().getSharedPreferences(APP_PREFERENCES, MODE_PRIVATE);
+        notifi = preferences.getBoolean(SP_NOTIF, true);
+        notifi_hide = preferences.getBoolean(SP_NOTIF_HIDE, false);
+
         String transitionTypeString = getTransitionTypeString(transitionType);
         notificationBuilder
-                .setSmallIcon(R.drawable.ic_media_play_dark)
+                .setSmallIcon(R.drawable.ic_person_pin_circle_white_24dp)
                 .setContentTitle("Geofence id: " + id)
                 .setContentText("Transition type: " + transitionTypeString)
                 .setVibrate(new long[]{500, 500})
                 .setContentIntent(openActivityIntetnt)
-                .setAutoCancel(true);
+                .setAutoCancel(true)
+                .setOngoing(notifi_hide);
 
-        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        nm.notify(transitionType * 100 + id, notificationBuilder.build());
+        if (notifi) {
+            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            nm.notify(transitionType * 100 + id, notificationBuilder.build());
+        }
 
         //// TODO: add to DB
         GeofenceTimeTable geofenceTimeTable = new GeofenceTimeTable(id, (new Date()).getTime(), transitionType);

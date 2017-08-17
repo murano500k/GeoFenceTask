@@ -204,6 +204,13 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         } else if(requestCode == MapsActivity.RESULT_SETTINGS_UPDATE) {
             if(resultCode == MapsActivity.RESULT_SETTINGS_DELETE) {
                 final GeofenceTable gt = data.getParcelableExtra(MapsActivity.GEOFENCE_TABLE);
+                if(gt.isActive) {
+                    Long id = new Long(gt.uid);
+                    Long []param = new Long[2];
+                    param[0] = id;
+                    param[1] = 1l;
+                    new SendGeofence().execute(param);
+                }
                 Thread th = new Thread(new Runnable() {
                     @Override
                     public void run() {
