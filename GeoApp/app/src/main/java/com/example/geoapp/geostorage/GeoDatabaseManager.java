@@ -24,7 +24,6 @@ import java.util.concurrent.ExecutionException;
  */
 
 public class GeoDatabaseManager extends AndroidViewModel{
-    static private final Object mutex = new Object();
     private static final String TAG = "GeoDatabaseManager";
 
     private static GeoDatabase mDb;
@@ -63,51 +62,45 @@ public class GeoDatabaseManager extends AndroidViewModel{
     }
 
     public void deleteGeoTable(GeofenceTable... params) {
-        (new DeleteGeoTableRow()).execute(params);
-    }
 
-    private class DeleteGeoTableRow extends AsyncTask<GeofenceTable, Void, Void> {
-
-        @Override
-        protected Void doInBackground(GeofenceTable... params) {
-            if(params.length == 1)
-                mGeofenceDao.delete(params[0]);
-            else
-                mGeofenceDao.deleteAll(params);
-            return null;
-        }
+        new AsyncTask<GeofenceTable, Void, Void>() {
+            @Override
+            protected Void doInBackground(GeofenceTable... params) {
+                if(params.length == 1)
+                    mGeofenceDao.delete(params[0]);
+                else
+                    mGeofenceDao.deleteAll(params);
+                return null;
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
     }
 
     public void deleteGeoTime(GeofenceTimeTable... params) {
-        (new DeleteGeoTimeRow()).execute(params);
-    }
 
-    private class DeleteGeoTimeRow extends AsyncTask<GeofenceTimeTable, Void, Void> {
-
-        @Override
-        protected Void doInBackground(GeofenceTimeTable... params) {
-            if(params.length == 1)
-                mGeofenceDao.delete(params[0]);
-            else
-                mGeofenceDao.deleteAll(params);
-            return null;
-        }
+        new AsyncTask<GeofenceTimeTable, Void, Void>() {
+            @Override
+            protected Void doInBackground(GeofenceTimeTable... params) {
+                if(params.length == 1)
+                    mGeofenceDao.delete(params[0]);
+                else
+                    mGeofenceDao.deleteAll(params);
+                return null;
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
     }
 
     public void updateGeoTable(GeofenceTable... params) {
-        (new UpdateGeoTableRow()).execute(params);
-    }
 
-    private class UpdateGeoTableRow extends AsyncTask<GeofenceTable, Void, Void> {
-
-        @Override
-        protected Void doInBackground(GeofenceTable... params) {
-            if(params.length == 1)
-                mGeofenceDao.updateGeofenceRow(params[0]);
-            else
-                mGeofenceDao.updateGeofenceTable(params);
-            return null;
-        }
+        new AsyncTask<GeofenceTable, Void, Void>() {
+            @Override
+            protected Void doInBackground(GeofenceTable... params) {
+                if(params.length == 1)
+                    mGeofenceDao.updateGeofenceRow(params[0]);
+                else
+                    mGeofenceDao.updateGeofenceTable(params);
+                return null;
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
     }
 
     public List<GeofenceTable> getAllActiveGeofenceRow() {
@@ -143,20 +136,6 @@ public class GeoDatabaseManager extends AndroidViewModel{
         if(mGeofenceDao == null)
             mGeofenceDao = mDb.geofenceDao();
         return mGeofenceDao;
-    }
-
-    public void open(final Context context) {
-        if(null == mDb)
-            (new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    synchronized (mutex) {
-                        mDb = Room.databaseBuilder(context,
-                                GeoDatabase.class, "geo-database").build();
-                        mGeofenceDao = mDb.geofenceDao();
-                    }
-                }
-            })).start();
     }
 
     public List<GeofenceTable> getGeofenceTables(boolean all) {

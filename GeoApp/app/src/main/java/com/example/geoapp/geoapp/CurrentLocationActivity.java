@@ -88,7 +88,7 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }
 
-        floatingActionButton=(FloatingActionButton)findViewById(R.id.floatingActionButton);
+        floatingActionButton = (FloatingActionButton)findViewById(R.id.floatingActionButton);
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

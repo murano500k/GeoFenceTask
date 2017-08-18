@@ -15,10 +15,10 @@ import android.widget.TextView;
 public class StartActivity extends AppCompatActivity {
 
     private Button btnStart;
-    TextView tv;
-    TextView tvSysAb;
-    TextView tvSysBl;
-    int color = Color.BLUE;
+    private TextView tv;
+    private TextView tvSysAb;
+    private TextView tvSysBl;
+    //int color = Color.BLUE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +39,6 @@ public class StartActivity extends AppCompatActivity {
         tvSysAb.setTypeface(faceSys);
         tvSysBl.setTypeface(faceSys);
         tvSysBl.setRotation(180);
-
 
         init();
     }

@@ -20,10 +20,9 @@ import com.google.android.gms.location.GeofencingEvent;
 import java.util.Date;
 import java.util.List;
 
-import static android.content.Context.MODE_PRIVATE;
-import static com.example.geoapp.geoapp.SettingsActivity.APP_PREFERENCES;
-import static com.example.geoapp.geoapp.SettingsActivity.SP_NOTIF;
-import static com.example.geoapp.geoapp.SettingsActivity.SP_NOTIF_HIDE;
+import static com.example.geoapp.geoapp.SettingsFragment.APP_PREFERENCES;
+import static com.example.geoapp.geoapp.SettingsFragment.SP_NOTIF;
+import static com.example.geoapp.geoapp.SettingsFragment.SP_NOTIF_HIDE;
 
 public class ReceiveTransitionsIntentService extends IntentService {
     private static final String TAG = "ReceiveTransitionsInten";
