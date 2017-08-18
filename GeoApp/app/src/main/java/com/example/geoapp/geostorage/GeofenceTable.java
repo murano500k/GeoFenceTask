@@ -51,7 +51,7 @@ public class GeofenceTable  implements Parcelable {
         double longitude = this.longitude;
         int transitionType = this.transitionType;
         float radius = this.radius;
-        return new GeofenceEntity(id,  latitude, longitude, radius, transitionType);
+        return new GeofenceEntity(id,  latitude, longitude, radius, transitionType, address);
     }
 
     @Ignore

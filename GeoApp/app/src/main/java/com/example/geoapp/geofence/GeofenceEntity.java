@@ -20,13 +20,15 @@ public class GeofenceEntity implements Serializable {
     private double longitude;
     private float radius;
     private int transitionType;
+    private String address;
 
-    public GeofenceEntity(int id, double latitude, double longitude, float radius, int transitionType) {
+    public GeofenceEntity(int id, double latitude, double longitude, float radius, int transitionType, String address) {
         this.id = id;
         this.latitude = latitude;
         this.longitude = longitude;
         this.radius = radius;
         this.transitionType = transitionType;
+        this.address = address;
     }
 
     public Geofence toGeofence() {
@@ -56,5 +58,9 @@ public class GeofenceEntity implements Serializable {
 
     public String getId() {
         return String.valueOf(id);
+    }
+
+    public String getAddress() {
+        return address;
     }
 }

@@ -30,6 +30,7 @@ public class ReceiveTransitionsIntentService extends IntentService {
     public static final String TRANSITION_INTENT_SERVICE = "TransitionsService";
     private boolean notifi = true;
     private boolean notifi_hide = false;
+    private String address = null;
 
     public ReceiveTransitionsIntentService() {
         super(TRANSITION_INTENT_SERVICE);
@@ -38,6 +39,7 @@ public class ReceiveTransitionsIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
+        address = intent.getStringExtra(GeofencingService.GET_ADDRESS);
         if (geofencingEvent.hasError()) {
             Log.e(TRANSITION_INTENT_SERVICE, "Location Services error: " + geofencingEvent.getErrorCode());
             return;
@@ -67,7 +69,7 @@ public class ReceiveTransitionsIntentService extends IntentService {
         String transitionTypeString = getTransitionTypeString(transitionType);
         notificationBuilder
                 .setSmallIcon(R.drawable.ic_person_pin_circle_white_24dp)
-                .setContentTitle("Geofence id: " + id)
+                .setContentTitle((address = address == null ? "Geofence id: " + id : address))
                 .setContentText("Transition type: " + transitionTypeString)
                 .setVibrate(new long[]{500, 500})
                 .setContentIntent(openActivityIntetnt)
@@ -98,6 +100,4 @@ public class ReceiveTransitionsIntentService extends IntentService {
                 return "unknown";
         }
     }
-
-
 }

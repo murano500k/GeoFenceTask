@@ -37,12 +37,14 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
     public static final String EXTRA_ACTION = "action";
     public static final String EXTRA_ACTION_ADD = "action_add";
     public static final String EXTRA_ACTION_REMOVE = "action_remove";
+    public static final String GET_ADDRESS = new String("GET_ADDRESS").toLowerCase();
 
     private List<Geofence> mGeofenceListsToAdd = new ArrayList<>();
     private List<GeofenceTable> mGeofenceRows = new ArrayList<>();
     private List<String> mGeofenceListIds = new ArrayList<>();
     private GoogleApiClient mGoogleApiClient;
     private int mTransitionType = 0;
+    private String address = null;
     private Action mAction;
     private int transitionType;
 
@@ -53,6 +55,7 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
         if (mAction == Action.ADD || mAction == mAction.REMOVE) {
             GeofenceEntity newGeofence = (GeofenceEntity) intent.getSerializableExtra(EXTRA_GEOFENCE);
             mTransitionType = newGeofence.getTransitionType();
+            address = newGeofence.getAddress();
             mGeofenceListIds.add(newGeofence.getId());
             mGeofenceListsToAdd.add(newGeofence.toGeofence())  ;
             transitionType = newGeofence.getTransitionType();
@@ -131,6 +134,7 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
 
     private PendingIntent getPendingIntent() {
         Intent transitionService = new Intent(this, ReceiveTransitionsIntentService.class);
+        transitionService.putExtra(GET_ADDRESS, address);
         return PendingIntent
                 .getService(this, 0, transitionService, PendingIntent.FLAG_UPDATE_CURRENT);
     }
