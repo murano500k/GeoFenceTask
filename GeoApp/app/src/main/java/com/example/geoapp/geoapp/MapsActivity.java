@@ -1,6 +1,8 @@
 package com.example.geoapp.geoapp;
 
 import android.app.ActivityOptions;
+import android.app.DialogFragment;
+import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.arch.lifecycle.LifecycleRegistry;
 import android.arch.lifecycle.LifecycleRegistryOwner;
@@ -26,6 +28,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -57,9 +60,9 @@ import java.util.concurrent.ExecutionException;
 public class MapsActivity extends AppCompatActivity implements LifecycleRegistryOwner, OnMapReadyCallback  {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
-    private static final String startUrl = "http://maps.googleapis.com/maps/api/geocode/json?latlng=";
-    private static final String commaUrl = ",";
-    private static final String endUrl = "&sensor=true";
+    private static final String START_URL = "http://maps.googleapis.com/maps/api/geocode/json?latlng=";
+    private static final String COMMA_URL = ",";
+    private static final String END_URL = "&sensor=true";
     public static final String GEOFENCE_GEOMETRY = "geofence_geometry";
     public static final String GEOFENCE_TABLE = "geofence_table";
     public static final int RESULT_SETTINGS_DELETE = 0;
@@ -96,14 +99,14 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         mGeoDatabaseManager = GeoDatabaseManager.getInstanse(this);
 
         //TODO: test_init
-        Thread threadInitDB = new Thread(new Runnable() {
+       /* Thread threadInitDB = new Thread(new Runnable() {
             @Override
             public void run() {
                 //mGeoDatabaseManager.testInit();
                 //mGeoDatabaseManager.cleanDB();
             }
         });
-        threadInitDB.start();
+        threadInitDB.start();*/
 
         hanhlerSendGeofence = new Handler(Looper.myLooper()){
             @Override
@@ -135,12 +138,17 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         addGeofenceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MapsActivity.this, CurrentLocationActivity.class);
-                
-                ActivityOptions ao = ActivityOptions.makeCustomAnimation(MapsActivity.this, R.anim.fadein, R.anim.fadeout);
-                //startActivityForResult(intent, MapsActivity.RESULT_SETTINGS_UPDATE, ao.toBundle());
-                overridePendingTransition(R.anim.fadein, R.anim.fadeout);
-                startActivityForResult(intent, MapsActivity.RESULT_CREATE_NEW_GEOFENCE, ao.toBundle());
+                if(!GeoUtils.isNetworkConnected(MapsActivity.this)) {
+                    FragmentManager fm = getFragmentManager();
+                    ConnectionDialogFragment dialogFragment = new ConnectionDialogFragment ();
+                    dialogFragment.show(fm, "Dialog Connection");
+                } else {
+                    Intent intent = new Intent(MapsActivity.this, CurrentLocationActivity.class);
+                    ActivityOptions ao = ActivityOptions.makeCustomAnimation(MapsActivity.this, R.anim.fadein, R.anim.fadeout);
+                    //startActivityForResult(intent, MapsActivity.RESULT_SETTINGS_UPDATE, ao.toBundle());
+                    overridePendingTransition(R.anim.fadein, R.anim.fadeout);
+                    startActivityForResult(intent, MapsActivity.RESULT_CREATE_NEW_GEOFENCE, ao.toBundle());
+                }
 
             }
         });
@@ -156,7 +164,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
     }
 
     private String getUrl(LatLng latLng) {
-        return startUrl + latLng.latitude + commaUrl + latLng.longitude + endUrl;
+        return START_URL + latLng.latitude + COMMA_URL + latLng.longitude + END_URL;
     }
 
     public void onMapReady(GoogleMap googleMap) {
@@ -259,87 +267,6 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
     @Override
     public LifecycleRegistry getLifecycle() {
         return mRegistry;
-    }
-
-    protected class GetAddress extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            // Showing progress dialog
-            pDialog = new ProgressDialog(MapsActivity.this);
-            pDialog.setMessage("Please wait...");
-            pDialog.setCancelable(false);
-            pDialog.show();
-
-        }
-
-        @Override
-        protected String doInBackground(String... urls) {
-            HttpHandler sh = new HttpHandler();
-
-            // Making a request to url and getting response
-            GeofenceTable geofenceTable = null;
-            for (String url : urls) {
-                String jsonStr = sh.makeServiceCall(url);
-                //Log.e(TAG, "Response from url: " + jsonStr);
-                if (jsonStr != null) {
-                    try {
-                        JSONObject jsonObj = new JSONObject(jsonStr);
-
-                        // Getting JSON Array node
-                        JSONArray contacts = jsonObj.getJSONArray("results");
-
-                        // looping through All Contacts
-                        //for (int i = 0; i < contacts.length(); i++) {
-                        JSONObject c = contacts.getJSONObject(0);
-                        String address = c.getString("formatted_address");
-                        geofenceTable = mGeoDatabaseManager.getDao().findByAddress(url);
-
-                        if (geofenceTable != null) {
-                            geofenceTable.address = address;
-                            mGeoDatabaseManager.getDao().updateGeofenceRow(geofenceTable);
-                         }
-
-                    } catch (final JSONException e) {
-                        Log.e(TAG, "Json parsing error: " + e.getMessage());
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getApplicationContext(),
-                                        "Json parsing error: " + e.getMessage(),
-                                        Toast.LENGTH_LONG)
-                                        .show();
-                            }
-                        });
-                    }
-                } else {
-                    Log.e(TAG, "Couldn't get json from server.");
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getApplicationContext(),
-                                    "Couldn't get json from server. Check LogCat for possible errors!",
-                                    Toast.LENGTH_LONG)
-                                    .show();
-                        }
-                    });
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            /*if (MapsActivity.customListAdapter != null) {
-                updateList();
-            }*/
-
-            if (pDialog.isShowing()) {
-                pDialog.dismiss();
-            }
-        }
     }
 
     String getAddressTest(String url) {
@@ -469,6 +396,25 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         return true;
     }
 
+    void updateAddresses() {
+        ArrayList<GeofenceTable> table = new ArrayList<GeofenceTable>();
+        table.addAll(mGeoDatabaseManager.getDao().findByUrlsInAddresses(START_URL +'%'));
+        String[] str = new String[table.size()];
+        int i = 0;
+        for(GeofenceTable gt : table) {
+            str[i] = gt.address;
+        }
+        //(new GetAddress(null)).execute(str);
+    }
+
+    private void sendGeo(GeofenceEntity myGeofence, GeofencingService.Action action) {
+        AppCompatActivity activity = this;
+        Intent geofencingService = new Intent(activity, GeofencingService.class);
+        geofencingService.putExtra(GeofencingService.EXTRA_ACTION, action);
+        geofencingService.putExtra(GeofencingService.EXTRA_GEOFENCE, myGeofence);
+        activity.startService(geofencingService);
+    }
+
     public static class UpdateReceiver extends BroadcastReceiver {
 
         @Override
@@ -478,17 +424,6 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             } else {
             }
         }
-    }
-
-    void updateAddresses() {
-        ArrayList<GeofenceTable> table = new ArrayList<GeofenceTable>();
-        table.addAll(mGeoDatabaseManager.getDao().findByUrlsInAddresses(startUrl+'%'));
-        String[] str = new String[table.size()];
-        int i = 0;
-        for(GeofenceTable gt : table) {
-            str[i] = gt.address;
-        }
-        //(new GetAddress(null)).execute(str);
     }
 
     public class GeoTableAdapter extends RecyclerView.Adapter<GeoTableAdapter.ItemViewHolder> {
@@ -587,12 +522,109 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         }
     }
 
-    private void sendGeo(GeofenceEntity myGeofence, GeofencingService.Action action) {
-        AppCompatActivity activity = this;
-        Intent geofencingService = new Intent(activity, GeofencingService.class);
-        //geofencingService.setAction(String.valueOf(Math.random()));
-        geofencingService.putExtra(GeofencingService.EXTRA_ACTION, action);
-        geofencingService.putExtra(GeofencingService.EXTRA_GEOFENCE, myGeofence);
-        activity.startService(geofencingService);
+    protected class GetAddress extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(MapsActivity.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+
+        }
+
+        @Override
+        protected String doInBackground(String... urls) {
+            HttpHandler sh = new HttpHandler();
+
+            // Making a request to url and getting response
+            GeofenceTable geofenceTable = null;
+            for (String url : urls) {
+                String jsonStr = sh.makeServiceCall(url);
+                //Log.e(TAG, "Response from url: " + jsonStr);
+                if (jsonStr != null) {
+                    try {
+                        JSONObject jsonObj = new JSONObject(jsonStr);
+
+                        // Getting JSON Array node
+                        JSONArray contacts = jsonObj.getJSONArray("results");
+
+                        // looping through All Contacts
+                        //for (int i = 0; i < contacts.length(); i++) {
+                        JSONObject c = contacts.getJSONObject(0);
+                        String address = c.getString("formatted_address");
+                        geofenceTable = mGeoDatabaseManager.getDao().findByAddress(url);
+
+                        if (geofenceTable != null) {
+                            geofenceTable.address = address;
+                            mGeoDatabaseManager.getDao().updateGeofenceRow(geofenceTable);
+                        }
+
+                    } catch (final JSONException e) {
+                        Log.e(TAG, "Json parsing error: " + e.getMessage());
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(),
+                                        "Json parsing error: " + e.getMessage(),
+                                        Toast.LENGTH_LONG)
+                                        .show();
+                            }
+                        });
+                    }
+                } else {
+                    Log.e(TAG, "Couldn't get json from server.");
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(),
+                                    "Couldn't get json from server. Check LogCat for possible errors!",
+                                    Toast.LENGTH_LONG)
+                                    .show();
+                        }
+                    });
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            /*if (MapsActivity.customListAdapter != null) {
+                updateList();
+            }*/
+
+            if (pDialog.isShowing()) {
+                pDialog.dismiss();
+            }
+        }
+    }
+
+    public static class ConnectionDialogFragment extends DialogFragment implements View.OnClickListener{
+
+        Button cancButton;
+        Button enableWifiButton;
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.dialog_fragment_connection, container, false);
+            getDialog().setTitle("Need internet connection");
+            cancButton = (Button)rootView.findViewById(R.id.dismiss_dialog_fragment);
+            enableWifiButton = (Button)rootView.findViewById(R.id.wifi_connection);
+            cancButton.setOnClickListener(this);
+            enableWifiButton.setOnClickListener(this);
+            return rootView;
+        }
+
+        @Override
+        public void onClick(View v) {
+            if(v.getId() == R.id.dismiss_dialog_fragment) {
+                ConnectionDialogFragment.this.dismiss();
+            } else if(v.getId() == R.id.wifi_connection) {
+                startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+            }
+        }
     }
 }

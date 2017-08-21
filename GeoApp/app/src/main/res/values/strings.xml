@@ -27,4 +27,7 @@
     <string name="text_transition_enter">Enter: </string>
     <string name="text_transition_exit">Exit: </string>
     <string name="text_transition_dwell">Dwell: </string>
+    <string name="text_connection_dialog">You need internet connection for this action</string>
+    <string name="button_wifi_settings">WiFi Settings</string>
+    <string name="text_cancel">Cancel</string>
 </resources>

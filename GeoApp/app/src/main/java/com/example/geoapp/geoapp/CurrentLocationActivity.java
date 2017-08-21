@@ -393,6 +393,11 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
             mMap.getUiSettings().setMyLocationButtonEnabled(false);
         }
+        if(mLastKnownLocation == null) {
+            mLastKnownLocation = new Location("def_location");
+            mLastKnownLocation.setLatitude(mDefaultLocation.latitude);
+            mLastKnownLocation.setLongitude(mDefaultLocation.longitude);
+        }
         chosenPoint = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
     }
 
