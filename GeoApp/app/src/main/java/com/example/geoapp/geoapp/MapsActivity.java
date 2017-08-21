@@ -10,7 +10,10 @@ import android.arch.lifecycle.Observer;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,6 +21,8 @@ import android.os.Message;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -41,6 +46,7 @@ import com.example.geoapp.geostorage.GeofenceTable;
 import com.example.geoapp.geostorage.GeofenceTimeTable;
 import com.example.geoapp.utils.GeoUtils;
 import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -60,9 +66,9 @@ import java.util.concurrent.ExecutionException;
 public class MapsActivity extends AppCompatActivity implements LifecycleRegistryOwner, OnMapReadyCallback  {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
-    private static final String START_URL = "http://maps.googleapis.com/maps/api/geocode/json?latlng=";
-    private static final String COMMA_URL = ",";
-    private static final String END_URL = "&sensor=true";
+    public static final String START_URL = "http://maps.googleapis.com/maps/api/geocode/json?latlng=";
+    public static final String COMMA_URL = ",";
+    public static final String END_URL = "&sensor=true";
     public static final String GEOFENCE_GEOMETRY = "geofence_geometry";
     public static final String GEOFENCE_TABLE = "geofence_table";
     public static final int RESULT_SETTINGS_DELETE = 0;
@@ -73,6 +79,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
     private static final int DEFAULT_ZOOM = 15;
     private static final int SEND_GEOFENCE_ADD = 5;
     private static final int SEND_GEOFENCE_REMOVE = 6;
+    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
 
     private GoogleMap mMap;
     private FloatingActionButton addGeofenceButton;
@@ -85,6 +92,8 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
     static MapsActivity instance;
     private GeoDatabaseManager mGeoDatabaseManager = null;
     private Handler hanhlerSendGeofence;
+    private boolean mLocationPermissionGranted = false;
+    private Location mLastKnownLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -153,6 +162,8 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             }
         });
 
+        registerReceiver(mUpdateReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
+
         Intent geofencingService = new Intent(this, GeofencingService.class);
         geofencingService.putExtra(GeofencingService.EXTRA_ACTION, GeofencingService.Action.START_INIT);
         this.startService(geofencingService);
@@ -169,6 +180,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
 
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        updateLocationUI();
     }
 
     private void deleteGeofenceTable(final GeofenceTable... geofenceTable) {
@@ -270,8 +282,10 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
     }
 
     String getAddressTest(String url) {
-        if(!GeoUtils.isNetworkConnected(this))
+        if(!GeoUtils.isNetworkConnected(getApplicationContext())) {
+            GeoDatabaseManager.setNeedUpdate(true);
             return url;
+        }
 
         HttpHandler sh = new HttpHandler();
         String address = null;
@@ -415,14 +429,33 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         activity.startService(geofencingService);
     }
 
-    public static class UpdateReceiver extends BroadcastReceiver {
+    private void updateLocationUI() {
+        if (mMap == null) {
+            return;
+        }
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (GeoUtils.isNetworkConnected(context)) {
+    /*
+     * Request location permission, so that we can get the location of the
+     * device. The result of the permission request is handled by a callback,
+     * onRequestPermissionsResult.
+     */
+        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mLocationPermissionGranted = true;
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        }
 
-            } else {
-            }
+        if (mLocationPermissionGranted) {
+            mMap.setMyLocationEnabled(true);
+            mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        } else {
+            mMap.setMyLocationEnabled(false);
+            mMap.getUiSettings().setMyLocationButtonEnabled(false);
+            mLastKnownLocation = null;
         }
     }
 
@@ -627,4 +660,16 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             }
         }
     }
+
+    BroadcastReceiver mUpdateReceiver = new BroadcastReceiver () {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (GeoUtils.isNetworkConnected(context) && GeoDatabaseManager.getNeedUpdate()) {
+                if(mGeoDatabaseManager != null)
+                    mGeoDatabaseManager.updateAddreses();
+            }
+        }
+    };
+
 }

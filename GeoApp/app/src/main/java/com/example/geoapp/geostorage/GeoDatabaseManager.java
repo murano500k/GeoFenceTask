@@ -5,19 +5,31 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModelProviders;
 import android.arch.persistence.room.Room;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.example.geoapp.geoapp.HttpHandler;
+import com.example.geoapp.geoapp.MapsActivity;
+import com.example.geoapp.utils.GeoUtils;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.wearable.Asset;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import static com.google.android.gms.internal.zzagz.runOnUiThread;
 
 /**
  * Created by bovchynnikov on 07.08.17.
@@ -25,6 +37,7 @@ import java.util.concurrent.ExecutionException;
 
 public class GeoDatabaseManager extends AndroidViewModel{
     private static final String TAG = "GeoDatabaseManager";
+    private static boolean needUpdate = false;
 
     private static GeoDatabase mDb;
     private GeofenceDao mGeofenceDao;
@@ -159,6 +172,57 @@ public class GeoDatabaseManager extends AndroidViewModel{
         mGeofenceDao.deleteAll(tempGeofenceTable);
     }
 
+    public void updateAddreses() {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                Log.d("Test_up", "UpdateReceiver case 1");
+                List<GeofenceTable> gtl = new ArrayList<>();
+                GeofenceDao gd = mDb.geofenceDao();
+                gtl.addAll(gd.findByUrlsInAddresses(MapsActivity.START_URL + '%'));
+                Log.d("Test_up", "UpdateReceiver case 2 gtl size = " + gtl.size());
+                for (GeofenceTable temp : gtl) {
+                    Log.d("Test_up", "UpdateReceiver case 3");
+                    HttpHandler sh = new HttpHandler();
+                    String address = null;
+                    String jsonStr = sh.makeServiceCall(temp.address);
+                    Log.e(TAG, "Response from url: " + jsonStr);
+
+                    if (jsonStr != null) {
+                        try {
+                            JSONObject jsonObj = new JSONObject(jsonStr);
+                            JSONArray contacts = jsonObj.getJSONArray("results");
+                            JSONObject c = contacts.getJSONObject(0);
+                            address = c.getString("formatted_address");
+                            temp.address = address;
+                            Log.d("Test_up", "UpdateReceiver case 4 addresses = " + address);
+                        } catch (final JSONException e) {
+                            Log.e(TAG, "Json parsing error: " + e.getMessage());
+                        }
+                    }
+                }
+                GeofenceTable []arr_gt = new GeofenceTable[gtl.size()];
+                arr_gt = gtl.toArray(arr_gt);
+                gd.updateGeofenceTable(arr_gt);
+                needUpdate = false;
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    public static void setNeedUpdate (boolean n) {
+        needUpdate = n;
+    }
+
+    public static boolean getNeedUpdate (){
+        return needUpdate;
+    }
+
     /// TODO: only for testing
     /// init_test start
     public ArrayList<GeofenceTable> mListGeofenceTableAll;
@@ -172,6 +236,7 @@ public class GeoDatabaseManager extends AndroidViewModel{
     private static final String endUrl = "&sensor=true";
     private int id = 0;
     public void testInit() {
+        needUpdate = true;
         mListGeofenceTableAll.add(getGeofenceRowTest(50.429557, 30.518141, 15, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
         mListGeofenceTableAll.add(getGeofenceRowTest(50.419827, 30.484082, 30, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));
         mListGeofenceTableAll.add(getGeofenceRowTest(50.444993, 30.501386, 45, Geofence.GEOFENCE_TRANSITION_ENTER, null, true));

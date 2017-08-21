@@ -1,17 +1,23 @@
 package com.example.geoapp.geoapp;
 
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,11 +25,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.geoapp.geofence.GeofenceGeometry;
+import com.example.geoapp.utils.GeoUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
@@ -68,6 +76,7 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
     private float mRadius = 0.f;
     private LatLng geofenceLatLng;
     private boolean drawGeofence = false;
+    private SwitchCompat switchCompat;
 
     private SeekBar mSeekBarRadius;
     private Circle circleDrawSeekBar = null;
@@ -251,7 +260,6 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(geofenceLatLng, DEFAULT_ZOOM));
         }
 
-
         mMap.setOnPolylineClickListener(this);
         mMap.setOnPolygonClickListener(this);
 
@@ -275,8 +283,19 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
             Intent intent = new Intent();
             setResult(MapsActivity.SKIP_MAP, intent);
             finish();
+        } else if (item.getItemId() == R.id.switch_gps) {
+
         }
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        RelativeLayout relativeLayout= (RelativeLayout) MenuItemCompat.getActionView(menu.findItem(R.id.switch_gps));
+        switchCompat = (SwitchCompat) relativeLayout.findViewById(R.id.switchForActionBar);
+        switchCompat.setChecked(GeoUtils.isGPSEnabled(this));
+        registerReceiver(mGpsSwitchStateReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
+        return super.onPrepareOptionsMenu(menu);
     }
 
     private void showDialogOption() {
@@ -428,4 +447,18 @@ public class CurrentLocationActivity extends AppCompatActivity implements OnMapR
     public void onPolylineClick(Polyline polyline) {
 
     }
+
+    private BroadcastReceiver mGpsSwitchStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (intent.getAction().matches("android.location.PROVIDERS_CHANGED")) {
+                if(GeoUtils.isGPSEnabled(CurrentLocationActivity.this)) {
+                    switchCompat.setChecked(true);
+                } else  {
+                    switchCompat.setChecked(false);
+                }
+            }
+        }
+    };
 }
