@@ -141,6 +141,7 @@ public class GeoDatabaseManager extends AndroidViewModel{
         return mGeofenceDao.insert(param);
     }
 
+    @SuppressWarnings("unused")
     public void insertAll(GeofenceTable... param) {
         mGeofenceDao.insertAll(param);
     }
@@ -151,6 +152,7 @@ public class GeoDatabaseManager extends AndroidViewModel{
         return mGeofenceDao;
     }
 
+    @SuppressWarnings("unused")
     public List<GeofenceTable> getGeofenceTables(boolean all) {
         return all ? mGeofenceDao.getAll() : mGeofenceDao.getAllActive(true);
     }

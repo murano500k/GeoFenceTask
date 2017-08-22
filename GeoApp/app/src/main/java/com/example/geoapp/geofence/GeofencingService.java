@@ -46,6 +46,9 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if(intent == null)
+            stopSelf();
+
         mAction = (Action) intent.getSerializableExtra(EXTRA_ACTION);
 
         if (mAction == Action.ADD || mAction == mAction.REMOVE) {
@@ -78,9 +81,7 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
         if (mAction == Action.ADD || mAction == Action.START_INIT) {
             GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
             Log.d("GEO", "Location client adds geofence");
-            builder.setInitialTrigger(mTransitionType
-                    /*transitionType == Geofence.GEOFENCE_TRANSITION_ENTER ? GeofencingRequest
-                            .INITIAL_TRIGGER_ENTER : GeofencingRequest.INITIAL_TRIGGER_EXIT*/);
+            builder.setInitialTrigger(mTransitionType);
             builder.addGeofences(mGeofenceListsToAdd);
             GeofencingRequest build = builder.build();
 

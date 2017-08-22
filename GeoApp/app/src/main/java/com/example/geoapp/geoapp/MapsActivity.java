@@ -46,13 +46,14 @@ import com.example.geoapp.geostorage.GeofenceTable;
 import com.example.geoapp.geostorage.GeofenceTimeTable;
 import com.example.geoapp.utils.GeoUtils;
 import com.google.android.gms.location.Geofence;
-import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
@@ -61,7 +62,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public class MapsActivity extends AppCompatActivity implements LifecycleRegistryOwner, OnMapReadyCallback  {
 
@@ -180,6 +180,10 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
 
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        builder.include(new LatLng(48.431226, 22.157590)).include(new LatLng(49.547834, 40.196753));
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(builder.build(), 100);
+        mMap.moveCamera(cameraUpdate);
         updateLocationUI();
     }
 
@@ -209,7 +213,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
                     Thread th = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            String address = getAddressTest(urlJson);
+                            String address = getAddress(urlJson);
                             long id = mGeoDatabaseManager.insert(getGeofenceRow(latLng.latitude, latLng.longitude, radius,
                                     ttype, address, active));
                             if(active) {
@@ -282,7 +286,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         return mRegistry;
     }
 
-    String getAddressTest(String url) {
+    String getAddress(String url) {
         if(!GeoUtils.isNetworkConnected(getApplicationContext())) {
             GeoDatabaseManager.setNeedUpdate(true);
             return url;
@@ -341,18 +345,6 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         return geofenceRow;
     }
 
-    String getAddress(String urlJson) {
-        String address = "";
-        try {
-            address = (new GetAddress()).execute(urlJson/*getUrl(latLng)*/).get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
-        return address;
-    }
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -407,19 +399,10 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             item.setChecked(true);
             showAllGeofenceInList = false;
             setListAdapter();
+        } else if (item.getItemId() == R.id.clear_map) {
+            mMap.clear();
         }
         return true;
-    }
-
-    void updateAddresses() {
-        ArrayList<GeofenceTable> table = new ArrayList<GeofenceTable>();
-        table.addAll(mGeoDatabaseManager.getDao().findByUrlsInAddresses(START_URL +'%'));
-        String[] str = new String[table.size()];
-        int i = 0;
-        for(GeofenceTable gt : table) {
-            str[i] = gt.address;
-        }
-        //(new GetAddress(null)).execute(str);
     }
 
     private void sendGeo(GeofenceEntity myGeofence, GeofencingService.Action action) {
@@ -556,6 +539,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         }
     }
 
+    @SuppressWarnings("unused")
     protected class GetAddress extends AsyncTask<String, Void, String> {
 
         @Override
@@ -658,6 +642,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             if(v.getId() == R.id.dismiss_dialog_fragment) {
                 ConnectionDialogFragment.this.dismiss();
             } else if(v.getId() == R.id.wifi_connection) {
+                ConnectionDialogFragment.this.dismiss();
                 startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
             }
         }
@@ -672,7 +657,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
 
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (GeoUtils.isNetworkConnected(context)) {
+                if (GeoUtils.isNetworkConnected(context) && ConnectionDialogFragment.this.isVisible()) {
                     ConnectionDialogFragment.this.dismiss();
                 }
             }
@@ -689,5 +674,4 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             }
         }
     };
-
 }
