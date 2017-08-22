@@ -13,7 +13,7 @@ import static com.google.android.gms.location.Geofence.NEVER_EXPIRE;
  */
 
 public class GeofenceEntity implements Serializable {
-    private static final int ONE_MINUTE = 60000;
+    private static final int DWELL_TIME = 1000000;
 
     private int id;
     private double latitude;
@@ -39,7 +39,7 @@ public class GeofenceEntity implements Serializable {
                 .setExpirationDuration(NEVER_EXPIRE);
 
         if((transitionType & Geofence.GEOFENCE_TRANSITION_DWELL) != 0)
-            builder.setLoiteringDelay(1000000);
+            builder.setLoiteringDelay(DWELL_TIME);
 
         return builder.build();
     }

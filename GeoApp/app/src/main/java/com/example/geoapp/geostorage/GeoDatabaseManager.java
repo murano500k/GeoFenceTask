@@ -161,6 +161,7 @@ public class GeoDatabaseManager extends AndroidViewModel{
         mDb = null;
     }
 
+    @SuppressWarnings("unused")
     public void cleanDB() {
         GeofenceTable[] tempGeofenceTable = new GeofenceTable[mGeofenceDao.getAll().size()];
         tempGeofenceTable = mGeofenceDao.getAll().toArray(tempGeofenceTable);
@@ -176,18 +177,14 @@ public class GeoDatabaseManager extends AndroidViewModel{
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
-                Log.d("Test_up", "UpdateReceiver case 1");
                 List<GeofenceTable> gtl = new ArrayList<>();
                 GeofenceDao gd = mDb.geofenceDao();
                 gtl.addAll(gd.findByUrlsInAddresses(MapsActivity.START_URL + '%'));
-                Log.d("Test_up", "UpdateReceiver case 2 gtl size = " + gtl.size());
                 for (GeofenceTable temp : gtl) {
-                    Log.d("Test_up", "UpdateReceiver case 3");
                     HttpHandler sh = new HttpHandler();
                     String address = null;
                     String jsonStr = sh.makeServiceCall(temp.address);
                     Log.e(TAG, "Response from url: " + jsonStr);
-
                     if (jsonStr != null) {
                         try {
                             JSONObject jsonObj = new JSONObject(jsonStr);
@@ -195,7 +192,6 @@ public class GeoDatabaseManager extends AndroidViewModel{
                             JSONObject c = contacts.getJSONObject(0);
                             address = c.getString("formatted_address");
                             temp.address = address;
-                            Log.d("Test_up", "UpdateReceiver case 4 addresses = " + address);
                         } catch (final JSONException e) {
                             Log.e(TAG, "Json parsing error: " + e.getMessage());
                         }
@@ -292,11 +288,13 @@ public class GeoDatabaseManager extends AndroidViewModel{
         return geofenceRow;
     }
 
+    @SuppressWarnings("unused")
     public GeofenceDao getGeofenceDao() {
         return mGeofenceDao;
     }
 
     ////////////////////////for_testing
+    @SuppressWarnings("unused")
     public synchronized List<GeofenceTable> getAll_OnlyForTest(boolean param) {
         return param ? mGeofenceDao.getAll() : mGeofenceDao.getAllActive(true);
     }

@@ -6,8 +6,6 @@ import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 
-import java.sql.Date;
-
 /**
  * Created by bovchynnikov on 27.07.17.
  */

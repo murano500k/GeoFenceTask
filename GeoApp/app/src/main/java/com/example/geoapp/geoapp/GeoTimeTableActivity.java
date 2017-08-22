@@ -28,12 +28,10 @@ import java.util.List;
 import android.os.Handler;
 import android.widget.Toast;
 
-public class GeoTimeTableActivity extends AppCompatActivity /*implements LifecycleRegistryOwner*/ {
+public class GeoTimeTableActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
-    //private final LifecycleRegistry mRegistry = new LifecycleRegistry(this);
-    private final static Object mutex = new Object();
     private List<GeofenceTimeTable> listTime = null;
     private final int EMPTY_TABLE = 0;
     private Handler finishActivity;
@@ -63,10 +61,6 @@ public class GeoTimeTableActivity extends AppCompatActivity /*implements Lifecyc
             @Override
             public void run() {
                 listTime = (new GeoDatabaseManager(getApplication()).getDao().getTimeTableByGeofenceTable(uid));
-                //new GeoDatabaseManager(getApplication()).getDao().
-                /*if(listTime == null){
-                    finishActivity.sendEmptyMessage(EMPTY_TABLE);
-                }*/
                 recyclerViewAdapter = new RecyclerViewAdapter(listTime);
                 RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
                 mRecyclerView.setLayoutManager(layoutManager);
@@ -80,11 +74,6 @@ public class GeoTimeTableActivity extends AppCompatActivity /*implements Lifecyc
             mRecyclerView.setAdapter(recyclerViewAdapter);
 
     }
-
-    /*@Override
-    public LifecycleRegistry getLifecycle() {
-        return mRegistry;
-    }*/
 
     public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ItemViewHolder> {
 
@@ -104,7 +93,6 @@ public class GeoTimeTableActivity extends AppCompatActivity /*implements Lifecyc
         @Override
         public void onBindViewHolder(ItemViewHolder viewHolder, int i) {
             GeofenceTimeTable record = timeTable.get(i);
-            //viewHolder.name.setText(record.getName());
             String type = getTransitionTypeString(record.type);
 
             viewHolder.time_enter.setText("Time " + type + ": " + new Date(record.time).toString());

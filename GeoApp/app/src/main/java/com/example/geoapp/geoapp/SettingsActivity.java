@@ -1,27 +1,13 @@
 package com.example.geoapp.geoapp;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.preference.CheckBoxPreference;
-import android.preference.EditTextPreference;
-import android.preference.Preference;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
-import android.preference.SwitchPreference;
-import android.support.annotation.Nullable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-import com.example.geoapp.geostorage.GeoDatabaseManager;
 import com.example.geoapp.geostorage.GeofenceTable;
-import com.google.android.gms.location.Geofence;
 
 public class SettingsActivity extends AppCompatActivity {
 

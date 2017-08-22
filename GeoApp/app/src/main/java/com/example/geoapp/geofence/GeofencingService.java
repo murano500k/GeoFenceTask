@@ -31,12 +31,8 @@ import java.util.List;
 
 public class GeofencingService extends Service implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
-    private static final String TAG = "GeofencingService";
-    public static final String EXTRA_REQUEST_IDS = "requestId";
     public static final String EXTRA_GEOFENCE = "geofence";
     public static final String EXTRA_ACTION = "action";
-    public static final String EXTRA_ACTION_ADD = "action_add";
-    public static final String EXTRA_ACTION_REMOVE = "action_remove";
     public static final String GET_ADDRESS = new String("GET_ADDRESS").toLowerCase();
 
     private List<Geofence> mGeofenceListsToAdd = new ArrayList<>();

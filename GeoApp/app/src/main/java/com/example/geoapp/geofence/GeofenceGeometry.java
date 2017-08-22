@@ -17,6 +17,7 @@ public class GeofenceGeometry implements Parcelable {
     private int mTmTransitionType;
     private boolean mActive;
 
+    @SuppressWarnings("unused")
     public GeofenceGeometry(Location location, float radius, int transitionType, boolean active){
         mLatLng = new LatLng(location.getLatitude(), location.getLongitude());
         mRadius = radius;
@@ -68,6 +69,7 @@ public class GeofenceGeometry implements Parcelable {
         return mLatLng;
     }
 
+    @SuppressWarnings("unused")
     public void setmLatLng(LatLng mLatLng) {
         this.mLatLng = mLatLng;
     }
@@ -76,6 +78,7 @@ public class GeofenceGeometry implements Parcelable {
         return mRadius;
     }
 
+    @SuppressWarnings("unused")
     public void setmRadius(float mRadius) {
         this.mRadius = mRadius;
     }
@@ -84,6 +87,7 @@ public class GeofenceGeometry implements Parcelable {
         return mTmTransitionType;
     }
 
+    @SuppressWarnings("unused")
     public void setmTmTransitionType(int mTmTransitionType) {
         this.mTmTransitionType = mTmTransitionType;
     }
@@ -92,6 +96,7 @@ public class GeofenceGeometry implements Parcelable {
         return mActive;
     }
 
+    @SuppressWarnings("unused")
     public void setmActive(boolean mActive) {
         this.mActive = mActive;
     }

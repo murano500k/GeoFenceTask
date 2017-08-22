@@ -21,6 +21,7 @@ public interface GeofenceDao {
     @Query("SELECT * FROM geotable")
     public LiveData<List<GeofenceTable>> getAllLiveData();
 
+    @SuppressWarnings("unused")
     @Query("SELECT * FROM geotable WHERE uid IN (:geofenceIds)")
     public List<GeofenceTable> loadAllByIds(int[] geofenceIds);
 
@@ -33,6 +34,7 @@ public interface GeofenceDao {
     @Query("SELECT * FROM geotable WHERE is_active IN (:active)")
     public LiveData<List<GeofenceTable>> getAllActiveLiveData(boolean active);
 
+    @SuppressWarnings("unused")
     @Query("SELECT address FROM geotable")
     public List<String> loadAllAddresses();
 
@@ -57,6 +59,7 @@ public interface GeofenceDao {
     @Query("SELECT * FROM geotable WHERE uid LIKE :id LIMIT 1")
     public GeofenceTable findByUid(String id);
 
+    @SuppressWarnings("unused")
     @Query("SELECT uid, address FROM geotable")
     public List<GeoAddresesTable> loadUidsAndAddresses();
 

@@ -247,6 +247,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
                     hanhlerSendGeofence.sendMessage(msg);
                 }
                 mGeoDatabaseManager.updateGeoTable(gt);
+                setListAdapter();
             }
         }
 
@@ -648,6 +649,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
             enableWifiButton = (Button)rootView.findViewById(R.id.wifi_connection);
             cancButton.setOnClickListener(this);
             enableWifiButton.setOnClickListener(this);
+            getActivity().registerReceiver(mDismissReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
             return rootView;
         }
 
@@ -659,6 +661,22 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
                 startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
             }
         }
+
+        @Override
+        public void onDestroyView() {
+            super.onDestroyView();
+            getActivity().unregisterReceiver(mDismissReceiver);
+        }
+
+        BroadcastReceiver mDismissReceiver = new BroadcastReceiver () {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (GeoUtils.isNetworkConnected(context)) {
+                    ConnectionDialogFragment.this.dismiss();
+                }
+            }
+        };
     }
 
     BroadcastReceiver mUpdateReceiver = new BroadcastReceiver () {
