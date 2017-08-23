@@ -46,10 +46,12 @@ public class GeofencingService extends Service implements GoogleApiClient.Connec
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(intent == null)
-            stopSelf();
 
-        mAction = (Action) intent.getSerializableExtra(EXTRA_ACTION);
+        try {
+            mAction = (Action) intent.getSerializableExtra(EXTRA_ACTION);
+        } catch (NullPointerException npe) {
+            stopSelf();
+        }
 
         if (mAction == Action.ADD || mAction == mAction.REMOVE) {
             GeofenceEntity newGeofence = (GeofenceEntity) intent.getSerializableExtra(EXTRA_GEOFENCE);

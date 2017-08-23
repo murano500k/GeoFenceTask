@@ -155,7 +155,7 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
                     Intent intent = new Intent(MapsActivity.this, CurrentLocationActivity.class);
                     ActivityOptions ao = ActivityOptions.makeCustomAnimation(MapsActivity.this, R.anim.fadein, R.anim.fadeout);
                     //startActivityForResult(intent, MapsActivity.RESULT_SETTINGS_UPDATE, ao.toBundle());
-                    overridePendingTransition(R.anim.fadein, R.anim.fadeout);
+                    overridePendingTransition(R.anim.fadeout, R.anim.fadein);
                     startActivityForResult(intent, MapsActivity.RESULT_CREATE_NEW_GEOFENCE, ao.toBundle());
                 }
 
@@ -163,9 +163,9 @@ public class MapsActivity extends AppCompatActivity implements LifecycleRegistry
         });
 
         registerReceiver(mUpdateReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
-
+        GeofencingService.Action action_init = GeofencingService.Action.START_INIT;
         Intent geofencingService = new Intent(this, GeofencingService.class);
-        geofencingService.putExtra(GeofencingService.EXTRA_ACTION, GeofencingService.Action.START_INIT);
+        geofencingService.putExtra(GeofencingService.EXTRA_ACTION, action_init);
         this.startService(geofencingService);
     }
 
